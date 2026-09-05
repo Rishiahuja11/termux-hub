@@ -1,0 +1,15 @@
+node_modules/
+*.log
+*.json.bak
+fdroid-index.json
+installed.json
+sessions.json
+users.json
+config.json
+certs/
+store/
+*.pem
+*.key
+*.crt
+.DS_Store
+Thumbs.db

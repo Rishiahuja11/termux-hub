@@ -1,0 +1,2748 @@
+[
+  {
+    "id": "fzf",
+    "name": "fzf",
+    "category": "terminal",
+    "description": "Command-line fuzzy finder",
+    "icon": "🔍",
+    "stars": 67000,
+    "repo": "https://github.com/junegunn/fzf",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "fzf"
+  },
+  {
+    "id": "bat",
+    "name": "bat",
+    "category": "terminal",
+    "description": "Cat clone with syntax highlighting",
+    "icon": "👹",
+    "stars": 48000,
+    "repo": "https://github.com/sharkdp/bat",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "bat"
+  },
+  {
+    "id": "ripgrep",
+    "name": "ripgrep",
+    "category": "terminal",
+    "description": "Fast recursive grep",
+    "icon": "🔎",
+    "stars": 49000,
+    "repo": "https://github.com/BurntSushi/ripgrep",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "ripgrep"
+  },
+  {
+    "id": "fd",
+    "name": "fd",
+    "category": "terminal",
+    "description": "Fast find alternative",
+    "icon": "🔍",
+    "stars": 35000,
+    "repo": "https://github.com/sharkdp/fd",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "fd"
+  },
+  {
+    "id": "delta",
+    "name": "delta",
+    "category": "terminal",
+    "description": "Syntax-highlighting pager for git",
+    "icon": "📝",
+    "stars": 25000,
+    "repo": "https://github.com/dandavison/delta",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "git-delta"
+  },
+  {
+    "id": "eza",
+    "name": "eza",
+    "category": "terminal",
+    "description": "Modern replacement for ls",
+    "icon": "📁",
+    "stars": 15000,
+    "repo": "https://github.com/eza-community/eza",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "eza"
+  },
+  {
+    "id": "zoxide",
+    "name": "zoxide",
+    "category": "terminal",
+    "description": "Smarter cd command",
+    "icon": "⚡",
+    "stars": 23000,
+    "repo": "https://github.com/ajeetdsouza/zoxide",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "zoxide"
+  },
+  {
+    "id": "starship",
+    "name": "starship",
+    "category": "terminal",
+    "description": "Cross-shell prompt",
+    "icon": "🚀",
+    "stars": 44000,
+    "repo": "https://github.com/starship/starship",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "starship"
+  },
+  {
+    "id": "glow",
+    "name": "glow",
+    "category": "terminal",
+    "description": "Render markdown in terminal",
+    "icon": "📝",
+    "stars": 18000,
+    "repo": "https://github.com/charmbracelet/glow",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "glow"
+  },
+  {
+    "id": "hexyl",
+    "name": "hexyl",
+    "category": "terminal",
+    "description": "Hex viewer",
+    "icon": "📊",
+    "stars": 9000,
+    "repo": "https://github.com/sharkdp/hexyl",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "hexyl"
+  },
+  {
+    "id": "dust",
+    "name": "dust",
+    "category": "terminal",
+    "description": "Intuitive disk usage tool",
+    "icon": "📈",
+    "stars": 10000,
+    "repo": "https://github.com/bootandy/dust",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "dust"
+  },
+  {
+    "id": "duf",
+    "name": "duf",
+    "category": "terminal",
+    "description": "Better df alternative",
+    "icon": "📊",
+    "stars": 11000,
+    "repo": "https://github.com/muesli/duf",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "duf"
+  },
+  {
+    "id": "navi",
+    "name": "navi",
+    "category": "terminal",
+    "description": "Interactive cheatsheet tool",
+    "icon": "📖",
+    "stars": 19000,
+    "repo": "https://github.com/denisidoro/navi",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "navi"
+  },
+  {
+    "id": "hyperfine",
+    "name": "hyperfine",
+    "category": "terminal",
+    "description": "Command-line benchmarking",
+    "icon": "⏱",
+    "stars": 22000,
+    "repo": "https://github.com/sharkdp/hyperfine",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "hyperfine"
+  },
+  {
+    "id": "btop",
+    "name": "btop",
+    "category": "terminal",
+    "description": "Resource monitor",
+    "icon": "📊",
+    "stars": 23000,
+    "repo": "https://github.com/aristocratos/btop",
+    "build": "make",
+    "lang": "c",
+    "pkg": "btop"
+  },
+  {
+    "id": "bottom",
+    "name": "bottom",
+    "category": "terminal",
+    "description": "Graphical process/system monitor",
+    "icon": "📊",
+    "stars": 17000,
+    "repo": "https://github.com/ClementTsang/bottom",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "bottom"
+  },
+  {
+    "id": "procs",
+    "name": "procs",
+    "category": "terminal",
+    "description": "Modern ps replacement",
+    "icon": "📊",
+    "stars": 5000,
+    "repo": "https://github.com/dalance/procs",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "procs"
+  },
+  {
+    "id": "tmux",
+    "name": "tmux",
+    "category": "terminal",
+    "description": "Terminal multiplexer",
+    "icon": "🖥",
+    "stars": 35000,
+    "repo": "https://github.com/tmux/tmux",
+    "build": "make",
+    "lang": "c",
+    "pkg": "tmux"
+  },
+  {
+    "id": "fish",
+    "name": "fish",
+    "category": "terminal",
+    "description": "Friendly interactive shell",
+    "icon": "🐟",
+    "stars": 26000,
+    "repo": "https://github.com/fish-shell/fish-shell",
+    "build": "cmake && make",
+    "lang": "c",
+    "pkg": "fish"
+  },
+  {
+    "id": "zsh",
+    "name": "zsh",
+    "category": "terminal",
+    "description": "Z shell with many features",
+    "icon": "⚡",
+    "stars": 40000,
+    "repo": "https://github.com/zsh-users/zsh",
+    "build": "make",
+    "lang": "c",
+    "pkg": "zsh"
+  },
+  {
+    "id": "bash",
+    "name": "bash",
+    "category": "terminal",
+    "description": "Bourne again shell",
+    "icon": "🐍",
+    "stars": 10000,
+    "pkg": "bash"
+  },
+  {
+    "id": "coreutils",
+    "name": "coreutils",
+    "category": "terminal",
+    "description": "GNU core utilities",
+    "icon": "🔧",
+    "stars": 5000,
+    "pkg": "coreutils"
+  },
+  {
+    "id": "findutils",
+    "name": "findutils",
+    "category": "terminal",
+    "description": "GNU find, xargs, locate",
+    "icon": "🔍",
+    "stars": 3000,
+    "pkg": "findutils"
+  },
+  {
+    "id": "grep",
+    "name": "grep",
+    "category": "terminal",
+    "description": "GNU grep",
+    "icon": "🔎",
+    "stars": 5000,
+    "pkg": "grep"
+  },
+  {
+    "id": "sed",
+    "name": "sed",
+    "category": "terminal",
+    "description": "Stream editor",
+    "icon": "✏",
+    "stars": 3000,
+    "pkg": "sed"
+  },
+  {
+    "id": "awk",
+    "name": "awk",
+    "category": "terminal",
+    "description": "Pattern scanning and processing",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "gawk"
+  },
+  {
+    "id": "jq",
+    "name": "jq",
+    "category": "terminal",
+    "description": "Command-line JSON processor",
+    "icon": "📊",
+    "stars": 30000,
+    "pkg": "jq"
+  },
+  {
+    "id": "yq",
+    "name": "yq",
+    "category": "terminal",
+    "description": "Command-line YAML/JSON processor",
+    "icon": "📊",
+    "stars": 12000,
+    "repo": "https://github.com/mikefarah/yq",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "yq"
+  },
+  {
+    "id": "wget",
+    "name": "wget",
+    "category": "terminal",
+    "description": "Network downloader",
+    "icon": "⬇",
+    "stars": 5000,
+    "pkg": "wget"
+  },
+  {
+    "id": "curl",
+    "name": "curl",
+    "category": "terminal",
+    "description": "URL transfer tool",
+    "icon": "⬇",
+    "stars": 35000,
+    "pkg": "curl"
+  },
+  {
+    "id": "httpie",
+    "name": "httpie",
+    "category": "terminal",
+    "description": "User-friendly HTTP client",
+    "icon": "🌐",
+    "stars": 33000,
+    "repo": "https://github.com/httpie/cli",
+    "build": "pip install httpie",
+    "lang": "python",
+    "pkg": "httpie"
+  },
+  {
+    "id": "aria2",
+    "name": "aria2",
+    "category": "terminal",
+    "description": "Multi-protocol download utility",
+    "icon": "⬇",
+    "stars": 35000,
+    "pkg": "aria2"
+  },
+  {
+    "id": "rsync",
+    "name": "rsync",
+    "category": "terminal",
+    "description": "Remote file sync tool",
+    "icon": "🔄",
+    "stars": 5000,
+    "pkg": "rsync"
+  },
+  {
+    "id": "socat",
+    "name": "socat",
+    "category": "terminal",
+    "description": "Multipurpose relay tool",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "socat"
+  },
+  {
+    "id": "ncat",
+    "name": "ncat",
+    "category": "terminal",
+    "description": "Improved netcat",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "ncat"
+  },
+  {
+    "id": "ncdu",
+    "name": "ncdu",
+    "category": "terminal",
+    "description": "NCurses disk usage",
+    "icon": "📁",
+    "stars": 8000,
+    "pkg": "ncdu"
+  },
+  {
+    "id": "tree",
+    "name": "tree",
+    "category": "terminal",
+    "description": "Directory tree viewer",
+    "icon": "🌳",
+    "stars": 3000,
+    "pkg": "tree"
+  },
+  {
+    "id": "htop",
+    "name": "htop",
+    "category": "terminal",
+    "description": "Interactive process viewer",
+    "icon": "📊",
+    "stars": 7000,
+    "pkg": "htop"
+  },
+  {
+    "id": "most",
+    "name": "most",
+    "category": "terminal",
+    "description": "Terminal pager",
+    "icon": "📝",
+    "stars": 2000,
+    "pkg": "most"
+  },
+  {
+    "id": "less",
+    "name": "less",
+    "category": "terminal",
+    "description": "Terminal pager",
+    "icon": "📝",
+    "stars": 5000,
+    "pkg": "less"
+  },
+  {
+    "id": "vim",
+    "name": "vim",
+    "category": "terminal",
+    "description": "Vi improved text editor",
+    "icon": "✎",
+    "stars": 25000,
+    "pkg": "vim"
+  },
+  {
+    "id": "nano",
+    "name": "nano",
+    "category": "terminal",
+    "description": "Simple text editor",
+    "icon": "✎",
+    "stars": 5000,
+    "pkg": "nano"
+  },
+  {
+    "id": "micro",
+    "name": "micro",
+    "category": "terminal",
+    "description": "Modern terminal text editor",
+    "icon": "✎",
+    "stars": 25000,
+    "repo": "https://github.com/zyedidia/micro",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "micro"
+  },
+  {
+    "id": "neovim",
+    "name": "neovim",
+    "category": "terminal",
+    "description": "Vim fork with modern features",
+    "icon": "🔮",
+    "stars": 83000,
+    "repo": "https://github.com/neovim/neovim",
+    "build": "make",
+    "lang": "c",
+    "pkg": "neovim"
+  },
+  {
+    "id": "atuin",
+    "name": "atuin",
+    "category": "terminal",
+    "description": "Magic shell history",
+    "icon": "⏰",
+    "stars": 22000,
+    "repo": "https://github.com/atuinsh/atuin",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "atuin"
+  },
+  {
+    "id": "direnv",
+    "name": "direnv",
+    "category": "terminal",
+    "description": "Environment switcher per directory",
+    "icon": "🌍",
+    "stars": 15000,
+    "repo": "https://github.com/direnv/direnv",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "direnv"
+  },
+  {
+    "id": "asdf",
+    "name": "asdf",
+    "category": "terminal",
+    "description": "Multi-language runtime version manager",
+    "icon": "🧩",
+    "stars": 21000,
+    "repo": "https://github.com/asdf-vm/asdf",
+    "build": "make",
+    "lang": "c",
+    "pkg": "asdf"
+  },
+  {
+    "id": "mise",
+    "name": "mise",
+    "category": "terminal",
+    "description": "Polyglot tool version manager",
+    "icon": "🧩",
+    "stars": 12000,
+    "repo": "https://github.com/jdx/mise",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "mise"
+  },
+  {
+    "id": "watch",
+    "name": "watch",
+    "category": "terminal",
+    "description": "Execute command periodically",
+    "icon": "⏰",
+    "stars": 3000,
+    "pkg": "watch"
+  },
+  {
+    "id": "screen",
+    "name": "screen",
+    "category": "terminal",
+    "description": "Terminal multiplexer",
+    "icon": "🖥",
+    "stars": 5000,
+    "pkg": "screen"
+  },
+  {
+    "id": "termshark",
+    "name": "termshark",
+    "category": "terminal",
+    "description": "Terminal UI for tshark",
+    "icon": "🐙",
+    "stars": 5000,
+    "repo": "https://github.com/gcla/termshark",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "termshark"
+  },
+  {
+    "id": "tshark",
+    "name": "tshark",
+    "category": "terminal",
+    "description": "Wireshark terminal version",
+    "icon": "🐙",
+    "stars": 5000,
+    "pkg": "tshark"
+  },
+  {
+    "id": "strace",
+    "name": "strace",
+    "category": "terminal",
+    "description": "System call tracer",
+    "icon": "🔍",
+    "stars": 5000,
+    "pkg": "strace"
+  },
+  {
+    "id": "ltrace",
+    "name": "ltrace",
+    "category": "terminal",
+    "description": "Library call tracer",
+    "icon": "🔍",
+    "stars": 2000,
+    "pkg": "ltrace"
+  },
+  {
+    "id": "lsof",
+    "name": "lsof",
+    "category": "terminal",
+    "description": "List open files",
+    "icon": "📄",
+    "stars": 3000,
+    "pkg": "lsof"
+  },
+  {
+    "id": "net-tools",
+    "name": "net-tools",
+    "category": "terminal",
+    "description": "Networking utilities",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "net-tools"
+  },
+  {
+    "id": "procps",
+    "name": "procps",
+    "category": "terminal",
+    "description": "Process utilities",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "procps"
+  },
+  {
+    "id": "psmisc",
+    "name": "psmisc",
+    "category": "terminal",
+    "description": "Process management utilities",
+    "icon": "📊",
+    "stars": 2000,
+    "pkg": "psmisc"
+  },
+  {
+    "id": "file",
+    "name": "file",
+    "category": "terminal",
+    "description": "File type identification",
+    "icon": "📄",
+    "stars": 5000,
+    "pkg": "file"
+  },
+  {
+    "id": "xxd",
+    "name": "xxd",
+    "category": "terminal",
+    "description": "Hex dump tool",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "xxd"
+  },
+  {
+    "id": "strings",
+    "name": "strings",
+    "category": "terminal",
+    "description": "Print strings from files",
+    "icon": "📝",
+    "stars": 3000,
+    "pkg": "strings"
+  },
+  {
+    "id": "pv",
+    "name": "pv",
+    "category": "terminal",
+    "description": "Pipe viewer with progress",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "pv"
+  },
+  {
+    "id": "parallel",
+    "name": "parallel",
+    "category": "terminal",
+    "description": "GNU parallel execution",
+    "icon": "🔀",
+    "stars": 7000,
+    "pkg": "parallel"
+  },
+  {
+    "id": "xmlstarlet",
+    "name": "xmlstarlet",
+    "category": "terminal",
+    "description": "XML toolkit",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "xmlstarlet"
+  },
+  {
+    "id": "pup",
+    "name": "pup",
+    "category": "terminal",
+    "description": "HTML parsing from command line",
+    "icon": "📝",
+    "stars": 9000,
+    "repo": "https://github.com/ericchiang/pup",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "pup"
+  },
+  {
+    "id": "htmlq",
+    "name": "htmlq",
+    "category": "terminal",
+    "description": "HTML query tool like jq for HTML",
+    "icon": "📝",
+    "stars": 1000,
+    "repo": "https://github.com/mgisenhov/htmlq",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "choose",
+    "name": "choose",
+    "category": "terminal",
+    "description": "Cut/awk alternative",
+    "icon": "📝",
+    "stars": 1000,
+    "repo": "https://github.com/thpani/choose",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "pastel",
+    "name": "pastel",
+    "category": "terminal",
+    "description": "Color tool and generator",
+    "icon": "🎨",
+    "stars": 5000,
+    "repo": "https://github.com/sharkdp/pastel",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "lsd",
+    "name": "lsd",
+    "category": "terminal",
+    "description": "LSDelicious ls replacement",
+    "icon": "📁",
+    "stars": 12000,
+    "repo": "https://github.com/lsd-rs/lsd",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "lsd"
+  },
+  {
+    "id": "exa",
+    "name": "exa",
+    "category": "terminal",
+    "description": "Modern ls replacement",
+    "icon": "📁",
+    "stars": 23000,
+    "repo": "https://github.com/ogham/exa",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "exa"
+  },
+  {
+    "id": "tre",
+    "name": "tre",
+    "category": "terminal",
+    "description": "Tree with git-aware coloring",
+    "icon": "🌳",
+    "stars": 3000,
+    "repo": "https://github.com/dduan/tre",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "sd",
+    "name": "sd",
+    "category": "terminal",
+    "description": "Intuitive find and replace CLI",
+    "icon": "🔄",
+    "stars": 5000,
+    "repo": "https://github.com/chmln/sd",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "tokei",
+    "name": "tokei",
+    "category": "terminal",
+    "description": "Code statistics tool",
+    "icon": "📊",
+    "stars": 6000,
+    "repo": "https://github.com/XAMPPRocky/tokei",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "cloc",
+    "name": "cloc",
+    "category": "terminal",
+    "description": "Count lines of code",
+    "icon": "📊",
+    "stars": 20000,
+    "pkg": "cloc"
+  },
+  {
+    "id": "scc",
+    "name": "scc",
+    "category": "terminal",
+    "description": "Fast code counter",
+    "icon": "📊",
+    "stars": 8000,
+    "repo": "https://github.com/boyter/scc",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "bench",
+    "name": "bench",
+    "category": "terminal",
+    "description": "Command-line benchmarking",
+    "icon": "⏱",
+    "stars": 1000,
+    "repo": "https://github.com/GitKitCo/bench",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "neovim-editor",
+    "name": "Neovim",
+    "category": "editor",
+    "description": "Hyperextensible Vim-based text editor",
+    "icon": "🔮",
+    "stars": 83000,
+    "repo": "https://github.com/neovim/neovim",
+    "build": "make",
+    "lang": "c",
+    "pkg": "neovim"
+  },
+  {
+    "id": "vim-editor",
+    "name": "Vim",
+    "category": "editor",
+    "description": "Vi improved text editor",
+    "icon": "✎",
+    "stars": 25000,
+    "pkg": "vim"
+  },
+  {
+    "id": "nano-editor",
+    "name": "Nano",
+    "category": "editor",
+    "description": "Simple terminal text editor",
+    "icon": "✎",
+    "stars": 5000,
+    "pkg": "nano"
+  },
+  {
+    "id": "micro-editor",
+    "name": "Micro",
+    "category": "editor",
+    "description": "Modern terminal text editor",
+    "icon": "✎",
+    "stars": 25000,
+    "repo": "https://github.com/zyedidia/micro",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "micro"
+  },
+  {
+    "id": "emacs",
+    "name": "Emacs",
+    "category": "editor",
+    "description": "Extensible text editor and OS",
+    "icon": "📝",
+    "stars": 40000,
+    "pkg": "emacs-nox"
+  },
+  {
+    "id": "kakoune",
+    "name": "Kakoune",
+    "category": "editor",
+    "description": "Modal editing inspired by Vim",
+    "icon": "✎",
+    "stars": 9000,
+    "repo": "https://github.com/mawww/kakoune",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "helix",
+    "name": "Helix",
+    "category": "editor",
+    "description": "Post-modern modal text editor",
+    "icon": "⚡",
+    "stars": 34000,
+    "repo": "https://github.com/helix-editor/helix",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "helix"
+  },
+  {
+    "id": "vis",
+    "name": "Vis",
+    "category": "editor",
+    "description": "Vim-like editor using sam structural regex",
+    "icon": "👀",
+    "stars": 3000,
+    "repo": "https://github.com/martanne/vis",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "amp",
+    "name": "Amp",
+    "category": "editor",
+    "description": "Intuitive text editor for the terminal",
+    "icon": "⚡",
+    "stars": 3000,
+    "repo": "https://github.com/jmacdonald/amp",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "olive",
+    "name": "Olive",
+    "category": "editor",
+    "description": "Non-linear video editor",
+    "icon": "🎬",
+    "stars": 5000,
+    "repo": "https://github.com/olive-editor/olive",
+    "build": "cmake && make",
+    "lang": "c"
+  },
+  {
+    "id": "geany",
+    "name": "Geany",
+    "category": "editor",
+    "description": "GTK-based text editor and IDE",
+    "icon": "📝",
+    "stars": 3000,
+    "pkg": "geany"
+  },
+  {
+    "id": "kate",
+    "name": "Kate",
+    "category": "editor",
+    "description": "KDE Advanced Text Editor",
+    "icon": "📝",
+    "stars": 3000,
+    "pkg": "kate"
+  },
+  {
+    "id": "notepadqq",
+    "name": "Notepadqq",
+    "category": "editor",
+    "description": "Notepad++ for Linux",
+    "icon": "📝",
+    "stars": 4000,
+    "repo": "https://github.com/notepadqq/notepadqq",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "code",
+    "name": "Code",
+    "category": "editor",
+    "description": "Visual Studio Code (install via pkg)",
+    "icon": "💻",
+    "stars": 160000,
+    "pkg": "code-oss"
+  },
+  {
+    "id": "lazygit",
+    "name": "lazygit",
+    "category": "dev",
+    "description": "Terminal UI for git commands",
+    "icon": "🔀",
+    "stars": 53000,
+    "repo": "https://github.com/jesseduffield/lazygit",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "lazygit"
+  },
+  {
+    "id": "gitui",
+    "name": "gitui",
+    "category": "dev",
+    "description": "Terminal UI for git",
+    "icon": "🔀",
+    "stars": 18000,
+    "repo": "https://github.com/extrawurst/gitui",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "gitui"
+  },
+  {
+    "id": "git",
+    "name": "Git",
+    "category": "dev",
+    "description": "Distributed version control",
+    "icon": "🔀",
+    "stars": 50000,
+    "pkg": "git"
+  },
+  {
+    "id": "gh",
+    "name": "GitHub CLI",
+    "category": "dev",
+    "description": "GitHub official CLI",
+    "icon": "👨‍💻",
+    "stars": 37000,
+    "repo": "https://github.com/cli/cli",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "gh"
+  },
+  {
+    "id": "tig",
+    "name": "tig",
+    "category": "dev",
+    "description": "Text-mode interface for git",
+    "icon": "🔀",
+    "stars": 12000,
+    "repo": "https://github.com/jonas/tig",
+    "build": "make",
+    "lang": "c",
+    "pkg": "tig"
+  },
+  {
+    "id": "lazydocker",
+    "name": "lazydocker",
+    "category": "dev",
+    "description": "Terminal UI for docker compose",
+    "icon": "🐳",
+    "stars": 44000,
+    "repo": "https://github.com/jesseduffield/lazydocker",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "lazydocker"
+  },
+  {
+    "id": "docker",
+    "name": "Docker",
+    "category": "dev",
+    "description": "Container platform",
+    "icon": "🐳",
+    "stars": 70000,
+    "pkg": "docker"
+  },
+  {
+    "id": "podman",
+    "name": "Podman",
+    "category": "dev",
+    "description": "Daemonless container engine",
+    "icon": "🐳",
+    "stars": 25000,
+    "pkg": "podman"
+  },
+  {
+    "id": "buildah",
+    "name": "Buildah",
+    "category": "dev",
+    "description": "OCI image builder",
+    "icon": "🔧",
+    "stars": 8000,
+    "pkg": "buildah"
+  },
+  {
+    "id": "skopeo",
+    "name": "Skopeo",
+    "category": "dev",
+    "description": "Container image utility",
+    "icon": "📦",
+    "stars": 8000,
+    "pkg": "skopeo"
+  },
+  {
+    "id": "restic",
+    "name": "Restic",
+    "category": "dev",
+    "description": "Fast backup program",
+    "icon": "💾",
+    "stars": 26000,
+    "repo": "https://github.com/restic/restic",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "restic"
+  },
+  {
+    "id": "rclone",
+    "name": "rclone",
+    "category": "dev",
+    "description": "Cloud storage sync",
+    "icon": "☁",
+    "stars": 48000,
+    "pkg": "rclone"
+  },
+  {
+    "id": "syncthing",
+    "name": "Syncthing",
+    "category": "dev",
+    "description": "Continuous file synchronization",
+    "icon": "🔄",
+    "stars": 65000,
+    "pkg": "syncthing"
+  },
+  {
+    "id": "httpie-dev",
+    "name": "HTTPie",
+    "category": "dev",
+    "description": "User-friendly HTTP client",
+    "icon": "🌐",
+    "stars": 33000,
+    "repo": "https://github.com/httpie/cli",
+    "build": "pip install httpie",
+    "lang": "python",
+    "pkg": "httpie"
+  },
+  {
+    "id": "postman",
+    "name": "Postman",
+    "category": "dev",
+    "description": "API development environment",
+    "icon": "📦",
+    "stars": 60000
+  },
+  {
+    "id": "insomnia",
+    "name": "Insomnia",
+    "category": "dev",
+    "description": "REST API client",
+    "icon": "🌙",
+    "stars": 35000
+  },
+  {
+    "id": "bruno",
+    "name": "Bruno",
+    "category": "dev",
+    "description": "Open-source API client",
+    "icon": "📦",
+    "stars": 25000,
+    "repo": "https://github.com/usebruno/bruno",
+    "build": "npm install",
+    "lang": "python"
+  },
+  {
+    "id": "siege",
+    "name": "Siege",
+    "category": "dev",
+    "description": "HTTP load testing tool",
+    "icon": "🏰",
+    "stars": 5000,
+    "pkg": "siege"
+  },
+  {
+    "id": "wrk",
+    "name": "wrk",
+    "category": "dev",
+    "description": "Modern HTTP benchmarking",
+    "icon": "⚡",
+    "stars": 40000,
+    "repo": "https://github.com/wg/wrk",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "vegeta",
+    "name": "Vegeta",
+    "category": "dev",
+    "description": "HTTP load testing tool",
+    "icon": "🐉",
+    "stars": 23000,
+    "repo": "https://github.com/tsenart/vegeta",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "hey",
+    "name": "hey",
+    "category": "dev",
+    "description": "HTTP load generator",
+    "icon": "📢",
+    "stars": 18000,
+    "repo": "https://github.com/rakyll/hey",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "drill",
+    "name": "drill",
+    "category": "dev",
+    "description": "HTTP load testing tool",
+    "icon": "🔧",
+    "stars": 2000,
+    "repo": "https://github.com/fcsonline/drill",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "ssh",
+    "name": "OpenSSH",
+    "category": "dev",
+    "description": "Secure shell client and server",
+    "icon": "🔐",
+    "stars": 10000,
+    "pkg": "openssh"
+  },
+  {
+    "id": "mosh",
+    "name": "Mosh",
+    "category": "dev",
+    "description": "Mobile shell with roaming",
+    "icon": "📡",
+    "stars": 12000,
+    "pkg": "mosh"
+  },
+  {
+    "id": "autossh",
+    "name": "autossh",
+    "category": "dev",
+    "description": "Auto restart SSH sessions",
+    "icon": "🔄",
+    "stars": 3000,
+    "pkg": "autossh"
+  },
+  {
+    "id": "tmate",
+    "name": "tmate",
+    "category": "dev",
+    "description": "Instant terminal sharing",
+    "icon": "👥",
+    "stars": 4000,
+    "repo": "https://github.com/tmate-io/tmate",
+    "build": "cmake && make",
+    "lang": "c",
+    "pkg": "tmate"
+  },
+  {
+    "id": "sshs",
+    "name": "sshs",
+    "category": "dev",
+    "description": "Terminal user interface for SSH",
+    "icon": "🔐",
+    "stars": 2000,
+    "repo": "https://github.com/jonhoo/sshs",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "gitea",
+    "name": "Gitea",
+    "category": "dev",
+    "description": "Lightweight self-hosted Git",
+    "icon": "🔀",
+    "stars": 45000,
+    "repo": "https://github.com/go-gitea/gitea",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "drone",
+    "name": "Drone",
+    "category": "dev",
+    "description": "Container-native CI/CD",
+    "icon": "✈",
+    "stars": 30000,
+    "repo": "https://github.com/harness/drone",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "woodpecker",
+    "name": "Woodpecker",
+    "category": "dev",
+    "description": "Simple CI/CD engine",
+    "icon": "🐛",
+    "stars": 5000,
+    "repo": "https://github.com/woodpecker-ci/woodpecker",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "tekton",
+    "name": "Tekton",
+    "category": "dev",
+    "description": "Kubernetes-native CI/CD",
+    "icon": "⚙",
+    "stars": 9000,
+    "repo": "https://github.com/tektoncd/pipeline",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "argo",
+    "name": "Argo",
+    "category": "dev",
+    "description": "Kubernetes native workflows",
+    "icon": "🌊",
+    "stars": 15000,
+    "repo": "https://github.com/argoproj/argo-workflows",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "pwsh",
+    "name": "PowerShell",
+    "category": "dev",
+    "description": "Cross-platform shell and scripting",
+    "icon": "🖥",
+    "stars": 45000,
+    "pkg": "pwsh"
+  },
+  {
+    "id": "nix",
+    "name": "Nix",
+    "category": "dev",
+    "description": "Package manager for reproducible builds",
+    "icon": "📦",
+    "stars": 13000,
+    "pkg": "nix"
+  },
+  {
+    "id": "bun",
+    "name": "Bun",
+    "category": "dev",
+    "description": "Fast JavaScript runtime",
+    "icon": "🍎",
+    "stars": 75000,
+    "repo": "https://github.com/oven-sh/bun",
+    "build": "cmake && make",
+    "lang": "c"
+  },
+  {
+    "id": "node",
+    "name": "Node.js",
+    "category": "dev",
+    "description": "JavaScript runtime",
+    "icon": "🍎",
+    "stars": 100000,
+    "pkg": "nodejs"
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "category": "dev",
+    "description": "Python programming language",
+    "icon": "🐍",
+    "stars": 60000,
+    "pkg": "python"
+  },
+  {
+    "id": "rust",
+    "name": "Rust",
+    "category": "dev",
+    "description": "Rust programming language",
+    "icon": "🦀",
+    "stars": 95000,
+    "pkg": "rust"
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "category": "dev",
+    "description": "Go programming language",
+    "icon": "🐧",
+    "stars": 120000,
+    "pkg": "golang"
+  },
+  {
+    "id": "java",
+    "name": "Java",
+    "category": "dev",
+    "description": "Java development kit",
+    "icon": "☕",
+    "stars": 40000,
+    "pkg": "openjdk-17"
+  },
+  {
+    "id": "gcc",
+    "name": "GCC",
+    "category": "dev",
+    "description": "GNU Compiler Collection",
+    "icon": "🔧",
+    "stars": 10000,
+    "pkg": "gcc"
+  },
+  {
+    "id": "clang",
+    "name": "Clang",
+    "category": "dev",
+    "description": "C/C++/ObjC compiler frontend",
+    "icon": "🔧",
+    "stars": 10000,
+    "pkg": "clang"
+  },
+  {
+    "id": "cmake",
+    "name": "CMake",
+    "category": "dev",
+    "description": "Cross-platform build system",
+    "icon": "⚙",
+    "stars": 6000,
+    "pkg": "cmake"
+  },
+  {
+    "id": "make",
+    "name": "Make",
+    "category": "dev",
+    "description": "GNU make build tool",
+    "icon": "🔧",
+    "stars": 5000,
+    "pkg": "make"
+  },
+  {
+    "id": "btop-mon",
+    "name": "btop",
+    "category": "monitor",
+    "description": "Resource monitor",
+    "icon": "📊",
+    "stars": 23000,
+    "repo": "https://github.com/aristocratos/btop",
+    "build": "make",
+    "lang": "c",
+    "pkg": "btop"
+  },
+  {
+    "id": "bottom-mon",
+    "name": "bottom",
+    "category": "monitor",
+    "description": "Graphical process/system monitor",
+    "icon": "📊",
+    "stars": 17000,
+    "repo": "https://github.com/ClementTsang/bottom",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "bottom"
+  },
+  {
+    "id": "glances",
+    "name": "Glances",
+    "category": "monitor",
+    "description": "System monitoring tool",
+    "icon": "📊",
+    "stars": 25000,
+    "pkg": "glances"
+  },
+  {
+    "id": "htop-mon",
+    "name": "htop",
+    "category": "monitor",
+    "description": "Interactive process viewer",
+    "icon": "📊",
+    "stars": 7000,
+    "pkg": "htop"
+  },
+  {
+    "id": "atop",
+    "name": "atop",
+    "category": "monitor",
+    "description": "Advanced system and process monitor",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "atop"
+  },
+  {
+    "id": "nmon",
+    "name": "nmon",
+    "category": "monitor",
+    "description": "Performance monitoring tool",
+    "icon": "📊",
+    "stars": 2000,
+    "pkg": "nmon"
+  },
+  {
+    "id": "dstat",
+    "name": "dstat",
+    "category": "monitor",
+    "description": "Versatile resource statistics",
+    "icon": "📊",
+    "stars": 4000,
+    "pkg": "dstat"
+  },
+  {
+    "id": "iostat",
+    "name": "iostat",
+    "category": "monitor",
+    "description": "I/O statistics monitoring",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "sysstat"
+  },
+  {
+    "id": "vmstat",
+    "name": "vmstat",
+    "category": "monitor",
+    "description": "Virtual memory statistics",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "procps"
+  },
+  {
+    "id": "sar",
+    "name": "sar",
+    "category": "monitor",
+    "description": "System activity reporter",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "sysstat"
+  },
+  {
+    "id": "pidstat",
+    "name": "pidstat",
+    "category": "monitor",
+    "description": "Process I/O statistics",
+    "icon": "📊",
+    "stars": 3000,
+    "pkg": "sysstat"
+  },
+  {
+    "id": "iftop",
+    "name": "iftop",
+    "category": "monitor",
+    "description": "Network interface bandwidth",
+    "icon": "🌐",
+    "stars": 5000,
+    "pkg": "iftop"
+  },
+  {
+    "id": "nethogs",
+    "name": "nethogs",
+    "category": "monitor",
+    "description": "Per-process network usage",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "nethogs"
+  },
+  {
+    "id": "nload",
+    "name": "nload",
+    "category": "monitor",
+    "description": "Network traffic monitor",
+    "icon": "🌐",
+    "stars": 2000,
+    "pkg": "nload"
+  },
+  {
+    "id": "bmon",
+    "name": "bmon",
+    "category": "monitor",
+    "description": "Bandwidth monitor and rate estimator",
+    "icon": "📊",
+    "stars": 2000,
+    "pkg": "bmon"
+  },
+  {
+    "id": "cbm",
+    "name": "cbm",
+    "category": "monitor",
+    "description": "Color Bitmap Meter disk usage",
+    "icon": "📊",
+    "stars": 500,
+    "pkg": "cbm"
+  },
+  {
+    "id": "duf-mon",
+    "name": "duf",
+    "category": "monitor",
+    "description": "Better df alternative",
+    "icon": "📊",
+    "stars": 11000,
+    "repo": "https://github.com/muesli/duf",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "duf"
+  },
+  {
+    "id": "dust-mon",
+    "name": "dust",
+    "category": "monitor",
+    "description": "Intuitive disk usage tool",
+    "icon": "📈",
+    "stars": 10000,
+    "repo": "https://github.com/bootandy/dust",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "dust"
+  },
+  {
+    "id": "gtop",
+    "name": "gtop",
+    "category": "monitor",
+    "description": "Terminal dashboard",
+    "icon": "📊",
+    "stars": 5000,
+    "pkg": "gtop"
+  },
+  {
+    "id": "navi-mon",
+    "name": "navi",
+    "category": "monitor",
+    "description": "Interactive cheatsheet",
+    "icon": "📖",
+    "stars": 19000,
+    "repo": "https://github.com/denisidoro/navi",
+    "build": "cargo build --release",
+    "lang": "rust",
+    "pkg": "navi"
+  },
+  {
+    "id": "iptraf",
+    "name": "iptraf-ng",
+    "category": "monitor",
+    "description": "Interactive colorful LAN monitor",
+    "icon": "🌐",
+    "stars": 1000,
+    "pkg": "iptraf-ng"
+  },
+  {
+    "id": "caddy",
+    "name": "Caddy",
+    "category": "net",
+    "description": "Web server with automatic HTTPS",
+    "icon": "🏠",
+    "stars": 60000,
+    "repo": "https://github.com/caddyserver/caddy",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "caddy"
+  },
+  {
+    "id": "nginx",
+    "name": "Nginx",
+    "category": "net",
+    "description": "High-performance web server",
+    "icon": "🌐",
+    "stars": 25000,
+    "pkg": "nginx"
+  },
+  {
+    "id": "apache2",
+    "name": "Apache2",
+    "category": "net",
+    "description": "Apache HTTP server",
+    "icon": "🏠",
+    "stars": 15000,
+    "pkg": "apache2"
+  },
+  {
+    "id": "haproxy",
+    "name": "HAProxy",
+    "category": "net",
+    "description": "TCP/HTTP load balancer",
+    "icon": "⚖",
+    "stars": 5000,
+    "pkg": "haproxy"
+  },
+  {
+    "id": "traefik",
+    "name": "Traefik",
+    "category": "net",
+    "description": "Cloud-native reverse proxy",
+    "icon": "🌐",
+    "stars": 50000,
+    "repo": "https://github.com/traefik/traefik",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "traefik"
+  },
+  {
+    "id": "certbot",
+    "name": "Certbot",
+    "category": "net",
+    "description": "Let's Encrypt certificate client",
+    "icon": "🔑",
+    "stars": 30000,
+    "pkg": "certbot"
+  },
+  {
+    "id": "openssl",
+    "name": "OpenSSL",
+    "category": "net",
+    "description": "TLS/SSL toolkit",
+    "icon": "🔐",
+    "stars": 25000,
+    "pkg": "openssl"
+  },
+  {
+    "id": "autossh-net",
+    "name": "autossh",
+    "category": "net",
+    "description": "Auto restart SSH sessions",
+    "icon": "🔄",
+    "stars": 3000,
+    "pkg": "autossh"
+  },
+  {
+    "id": "wireguard",
+    "name": "WireGuard",
+    "category": "net",
+    "description": "Modern VPN tunnel",
+    "icon": "🛡",
+    "stars": 20000,
+    "pkg": "wireguard-tools"
+  },
+  {
+    "id": "openvpn",
+    "name": "OpenVPN",
+    "category": "net",
+    "description": "VPN daemon",
+    "icon": "🛡",
+    "stars": 15000,
+    "pkg": "openvpn"
+  },
+  {
+    "id": "tailscale",
+    "name": "Tailscale",
+    "category": "net",
+    "description": "Mesh VPN based on WireGuard",
+    "icon": "🌐",
+    "stars": 18000
+  },
+  {
+    "id": "zerotier",
+    "name": "ZeroTier",
+    "category": "net",
+    "description": "Software-defined networking",
+    "icon": "🌐",
+    "stars": 12000
+  },
+  {
+    "id": "syncthing-net",
+    "name": "Syncthing",
+    "category": "net",
+    "description": "Continuous file synchronization",
+    "icon": "🔄",
+    "stars": 65000,
+    "pkg": "syncthing"
+  },
+  {
+    "id": "rclone-net",
+    "name": "rclone",
+    "category": "net",
+    "description": "Cloud storage sync",
+    "icon": "☁",
+    "stars": 48000,
+    "pkg": "rclone"
+  },
+  {
+    "id": "filebrowser",
+    "name": "File Browser",
+    "category": "net",
+    "description": "Web file manager",
+    "icon": "📁",
+    "stars": 25000,
+    "repo": "https://github.com/filebrowser/filebrowser",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "gossa",
+    "name": "Gossa",
+    "category": "net",
+    "description": "Fast and simple web file server",
+    "icon": "🏠",
+    "stars": 2000,
+    "repo": "https://github.com/nicedoc/gossa",
+    "build": "go build",
+    "lang": "go"
+  },
+  {
+    "id": "samba",
+    "name": "Samba",
+    "category": "net",
+    "description": "SMB/CIFS file sharing",
+    "icon": "📦",
+    "stars": 3000,
+    "pkg": "samba"
+  },
+  {
+    "id": "nfs",
+    "name": "NFS Utils",
+    "category": "net",
+    "description": "Network File System client/server",
+    "icon": "📁",
+    "stars": 2000,
+    "pkg": "nfs-utils"
+  },
+  {
+    "id": "avahi",
+    "name": "Avahi",
+    "category": "net",
+    "description": "mDNS/DNS-SD service discovery",
+    "icon": "🌐",
+    "stars": 1000,
+    "pkg": "avahi"
+  },
+  {
+    "id": "nmap",
+    "name": "Nmap",
+    "category": "net",
+    "description": "Network discovery and security audit",
+    "icon": "🔍",
+    "stars": 40000,
+    "pkg": "nmap"
+  },
+  {
+    "id": "masscan",
+    "name": "Masscan",
+    "category": "net",
+    "description": "TCP port scanner",
+    "icon": "⚡",
+    "stars": 25000,
+    "repo": "https://github.com/robertdavidgraham/masscan",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "rustscan",
+    "name": "RustScan",
+    "category": "net",
+    "description": "Port scanner written in Rust",
+    "icon": "⚡",
+    "stars": 12000,
+    "repo": "https://github.com/RustScan/RustScan",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "zmap",
+    "name": "ZMap",
+    "category": "net",
+    "description": "Fast single packet network scanner",
+    "icon": "🔍",
+    "stars": 5000,
+    "repo": "https://github.com/zmap/zmap",
+    "build": "cmake && make",
+    "lang": "c"
+  },
+  {
+    "id": "netcat",
+    "name": "Netcat",
+    "category": "net",
+    "description": "TCP/UDP connection utility",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "netcat-openbsd"
+  },
+  {
+    "id": "tcpdump",
+    "name": "tcpdump",
+    "category": "net",
+    "description": "Network packet analyzer",
+    "icon": "📊",
+    "stars": 5000,
+    "pkg": "tcpdump"
+  },
+  {
+    "id": "iproute2",
+    "name": "iproute2",
+    "category": "net",
+    "description": "Advanced IP routing and devices",
+    "icon": "🌐",
+    "stars": 3000,
+    "pkg": "iproute2"
+  },
+  {
+    "id": "bandwhich",
+    "name": "bandwhich",
+    "category": "net",
+    "description": "Bandwidth utilization monitor",
+    "icon": "📊",
+    "stars": 9000,
+    "repo": "https://github.com/imsnif/bandwhich",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "dog",
+    "name": "dog",
+    "category": "net",
+    "description": "Modern DNS client",
+    "icon": "🐕",
+    "stars": 3000,
+    "repo": "https://github.com/mr-kork/dog",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "dnslookup",
+    "name": "dnslookup",
+    "category": "net",
+    "description": "Simple DNS lookup utility",
+    "icon": "🔍",
+    "stars": 1000,
+    "pkg": "dnsutils"
+  },
+  {
+    "id": "curl-net",
+    "name": "curl",
+    "category": "net",
+    "description": "URL transfer tool",
+    "icon": "⬇",
+    "stars": 35000,
+    "pkg": "curl"
+  },
+  {
+    "id": "wget-net",
+    "name": "wget",
+    "category": "net",
+    "description": "Network downloader",
+    "icon": "⬇",
+    "stars": 5000,
+    "pkg": "wget"
+  },
+  {
+    "id": "mpv",
+    "name": "mpv",
+    "category": "media",
+    "description": "Minimalist media player",
+    "icon": "🎬",
+    "stars": 28000,
+    "repo": "https://github.com/mpv-player/mpv",
+    "build": "meson build && ninja",
+    "lang": "c",
+    "pkg": "mpv"
+  },
+  {
+    "id": "yt-dlp",
+    "name": "yt-dlp",
+    "category": "media",
+    "description": "YouTube video downloader",
+    "icon": "🎬",
+    "stars": 85000,
+    "repo": "https://github.com/yt-dlp/yt-dlp",
+    "build": "pip install yt-dlp",
+    "lang": "python",
+    "pkg": "yt-dlp"
+  },
+  {
+    "id": "ffmpeg",
+    "name": "FFmpeg",
+    "category": "media",
+    "description": "Complete audio/video framework",
+    "icon": "🎬",
+    "stars": 45000,
+    "pkg": "ffmpeg"
+  },
+  {
+    "id": "imagemagick",
+    "name": "ImageMagick",
+    "category": "media",
+    "description": "Image manipulation suite",
+    "icon": "🖼",
+    "stars": 12000,
+    "pkg": "imagemagick"
+  },
+  {
+    "id": "sox",
+    "name": "SoX",
+    "category": "media",
+    "description": "Swiss army knife of audio",
+    "icon": "🎵",
+    "stars": 4000,
+    "pkg": "sox"
+  },
+  {
+    "id": "audacity",
+    "name": "Audacity",
+    "category": "media",
+    "description": "Audio editor and recorder",
+    "icon": "🎵",
+    "stars": 12000
+  },
+  {
+    "id": "obs",
+    "name": "OBS Studio",
+    "category": "media",
+    "description": "Streaming and recording",
+    "icon": "🎬",
+    "stars": 60000
+  },
+  {
+    "id": "vlc",
+    "name": "VLC",
+    "category": "media",
+    "description": "Cross-platform media player",
+    "icon": "🎬",
+    "stars": 15000
+  },
+  {
+    "id": "celluloid",
+    "name": "Celluloid",
+    "category": "media",
+    "description": "GTK front-end for mpv",
+    "icon": "🎬",
+    "stars": 2000,
+    "repo": "https://github.com/celluloid-player/celluloid",
+    "build": "meson build && ninja",
+    "lang": "c"
+  },
+  {
+    "id": "mpd",
+    "name": "MPD",
+    "category": "media",
+    "description": "Music Player Daemon",
+    "icon": "🎵",
+    "stars": 5000,
+    "pkg": "mpd"
+  },
+  {
+    "id": "ncmpcpp",
+    "name": "ncmpcpp",
+    "category": "media",
+    "description": "NCurses MPD client",
+    "icon": "🎵",
+    "stars": 3000,
+    "pkg": "ncmpcpp"
+  },
+  {
+    "id": "cmus",
+    "name": "cmus",
+    "category": "media",
+    "description": "Terminal music player",
+    "icon": "🎵",
+    "stars": 5000,
+    "pkg": "cmus"
+  },
+  {
+    "id": "mocp",
+    "name": "MOC",
+    "category": "media",
+    "description": "Music On Console player",
+    "icon": "🎵",
+    "stars": 2000,
+    "pkg": "moc"
+  },
+  {
+    "id": "pianobar",
+    "name": "Pianobar",
+    "category": "media",
+    "description": "Pandora client",
+    "icon": "🎹",
+    "stars": 2000,
+    "repo": "https://github.com/PromyLOFF/pianobar",
+    "build": "make",
+    "lang": "c"
+  },
+  {
+    "id": "spotifyd",
+    "name": "Spotifyd",
+    "category": "media",
+    "description": "Spotify Connect daemon",
+    "icon": "🎵",
+    "stars": 8000,
+    "repo": "https://github.com/Spotifyd/spotifyd",
+    "build": "cargo build --release",
+    "lang": "rust"
+  },
+  {
+    "id": "pulseaudio",
+    "name": "PulseAudio",
+    "category": "media",
+    "description": "Sound server",
+    "icon": "🔊",
+    "stars": 2000,
+    "pkg": "pulseaudio"
+  },
+  {
+    "id": "pipewire",
+    "name": "PipeWire",
+    "category": "media",
+    "description": "Multimedia server",
+    "icon": "🔊",
+    "stars": 5000,
+    "pkg": "pipewire"
+  },
+  {
+    "id": "alsa",
+    "name": "ALSA",
+    "category": "media",
+    "description": "Advanced Linux Sound Architecture",
+    "icon": "🎵",
+    "stars": 1000,
+    "pkg": "alsa-utils"
+  },
+  {
+    "id": "yt-dlp-media",
+    "name": "yt-dlp",
+    "category": "media",
+    "description": "YouTube video downloader (pkg)",
+    "icon": "🎬",
+    "stars": 85000,
+    "pkg": "yt-dlp"
+  },
+  {
+    "id": "handbrake",
+    "name": "HandBrake",
+    "category": "media",
+    "description": "Video transcoder",
+    "icon": "🎬",
+    "stars": 15000
+  },
+  {
+    "id": "kdenlive",
+    "name": "Kdenlive",
+    "category": "media",
+    "description": "Non-linear video editor",
+    "icon": "🎬",
+    "stars": 5000
+  },
+  {
+    "id": "shotcut",
+    "name": "Shotcut",
+    "category": "media",
+    "description": "Free video editor",
+    "icon": "🎬",
+    "stars": 5000
+  },
+  {
+    "id": "pass",
+    "name": "pass",
+    "category": "security",
+    "description": "Standard Unix password manager",
+    "icon": "🔑",
+    "stars": 15000,
+    "pkg": "pass"
+  },
+  {
+    "id": "gpg",
+    "name": "GnuPG",
+    "category": "security",
+    "description": "OpenPGP encryption",
+    "icon": "🔒",
+    "stars": 5000,
+    "pkg": "gnupg"
+  },
+  {
+    "id": "age",
+    "name": "age",
+    "category": "security",
+    "description": "Modern file encryption",
+    "icon": "🔑",
+    "stars": 17000,
+    "repo": "https://github.com/FiloSottile/age",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "age"
+  },
+  {
+    "id": "sops",
+    "name": "SOPS",
+    "category": "security",
+    "description": "Secrets management",
+    "icon": "🔒",
+    "stars": 16000,
+    "repo": "https://github.com/getsops/sops",
+    "build": "go build",
+    "lang": "go",
+    "pkg": "sops"
+  },
+  {
+    "id": "vault",
+    "name": "Vault",
+    "category": "security",
+    "description": "Secrets and access management",
+    "icon": "🔒",
+    "stars": 30000
+  },
+  {
+    "id": "bitwarden",
+    "name": "Bitwarden",
+    "category": "security",
+    "description": "Password manager",
+    "icon": "🔑",
+    "stars": 12000
+  },
+  {
+    "id": "keepassxc",
+    "name": "KeePassXC",
+    "category": "security",
+    "description": "Password manager",
+    "icon": "🔑",
+    "stars": 20000
+  },
+  {
+    "id": "keybase",
+    "name": "Keybase",
+    "category": "security",
+    "description": "Cryptographic identity",
+    "icon": "🔑",
+    "stars": 18000
+  },
+  {
+    "id": "openssl-sec",
+    "name": "OpenSSL",
+    "category": "security",
+    "description": "TLS/SSL toolkit",
+    "icon": "🔐",
+    "stars": 25000,
+    "pkg": "openssl"
+  },
+  {
+    "id": "nmap-sec",
+    "name": "Nmap",
+    "category": "security",
+    "description": "Network security scanner",
+    "icon": "🔍",
+    "stars": 40000,
+    "pkg": "nmap"
+  },
+  {
+    "id": "lynis",
+    "name": "Lynis",
+    "category": "security",
+    "description": "Security auditing tool",
+    "icon": "🛡",
+    "stars": 13000,
+    "pkg": "lynis"
+  },
+  {
+    "id": "clamav",
+    "name": "ClamAV",
+    "category": "security",
+    "description": "Antivirus scanner",
+    "icon": "🛡",
+    "stars": 5000,
+    "pkg": "clamav"
+  },
+  {
+    "id": "rkhunter",
+    "name": "rkhunter",
+    "category": "security",
+    "description": "Rootkit detector",
+    "icon": "🛡",
+    "stars": 2000,
+    "pkg": "rkhunter"
+  },
+  {
+    "id": "chkrootkit",
+    "name": "chkrootkit",
+    "category": "security",
+    "description": "Local rootkit detector",
+    "icon": "🛡",
+    "stars": 1000,
+    "pkg": "chkrootkit"
+  },
+  {
+    "id": "aide",
+    "name": "AIDE",
+    "category": "security",
+    "description": "File integrity checker",
+    "icon": "🔍",
+    "stars": 1000,
+    "pkg": "aide"
+  },
+  {
+    "id": "task",
+    "name": "Taskwarrior",
+    "category": "productivity",
+    "description": "Task management",
+    "icon": "✅",
+    "stars": 5000,
+    "pkg": "task"
+  },
+  {
+    "id": "todotxt",
+    "name": "Todo.txt",
+    "category": "productivity",
+    "description": "Plain text task management",
+    "icon": "📝",
+    "stars": 10000,
+    "repo": "https://github.com/todotxt/todo.txt-cli",
+    "build": "make",
+    "lang": "c",
+    "pkg": "todo"
+  },
+  {
+    "id": "org-mode",
+    "name": "Org Mode",
+    "category": "productivity",
+    "description": "Emacs outlining and planning",
+    "icon": "📝",
+    "stars": 5000,
+    "pkg": "emacs-nox"
+  },
+  {
+    "id": "logseq",
+    "name": "Logseq",
+    "category": "productivity",
+    "description": "Knowledge management",
+    "icon": "📓",
+    "stars": 30000
+  },
+  {
+    "id": "obsidian",
+    "name": "Obsidian",
+    "category": "productivity",
+    "description": "Knowledge base with markdown",
+    "icon": "📓",
+    "stars": 20000
+  },
+  {
+    "id": "joplin",
+    "name": "Joplin",
+    "category": "productivity",
+    "description": "Note taking with sync",
+    "icon": "📝",
+    "stars": 45000
+  },
+  {
+    "id": "standardnotes",
+    "name": "Standard Notes",
+    "category": "productivity",
+    "description": "Encrypted notes",
+    "icon": "🔒",
+    "stars": 15000
+  },
+  {
+    "id": "simplenote",
+    "name": "Simplenote",
+    "category": "productivity",
+    "description": "Lightweight note taking",
+    "icon": "📝",
+    "stars": 5000
+  },
+  {
+    "id": "marktext",
+    "name": "Mark Text",
+    "category": "productivity",
+    "description": "Markdown editor",
+    "icon": "📝",
+    "stars": 15000
+  },
+  {
+    "id": "ghostwriter",
+    "name": "Ghostwriter",
+    "category": "productivity",
+    "description": "Markdown editor",
+    "icon": "📝",
+    "stars": 3000
+  },
+  {
+    "id": "zettlr",
+    "name": "Zettlr",
+    "category": "productivity",
+    "description": "Markdown editor for writing",
+    "icon": "📝",
+    "stars": 10000
+  },
+  {
+    "id": "bdfr",
+    "name": "bdfr",
+    "category": "productivity",
+    "description": "Reddit content downloader",
+    "icon": "⬇",
+    "stars": 3000,
+    "repo": "https://github.com/serene-void/bdfr",
+    "build": "pip install bdfr",
+    "lang": "python"
+  },
+  {
+    "id": "gallery-dl",
+    "name": "gallery-dl",
+    "category": "productivity",
+    "description": "Image gallery downloader",
+    "icon": "🖼",
+    "stars": 12000,
+    "repo": "https://github.com/mikf/gallery-dl",
+    "build": "pip install gallery-dl",
+    "lang": "python"
+  },
+  {
+    "id": "hledger",
+    "name": "hledger",
+    "category": "productivity",
+    "description": "Plain text accounting",
+    "icon": "💰",
+    "stars": 3000,
+    "pkg": "hledger"
+  },
+  {
+    "id": "ranger",
+    "name": "ranger",
+    "category": "productivity",
+    "description": "Console file manager",
+    "icon": "📁",
+    "stars": 15000,
+    "pkg": "ranger"
+  },
+  {
+    "id": "nnn",
+    "name": "nnn",
+    "category": "productivity",
+    "description": "Terminal file manager",
+    "icon": "📁",
+    "stars": 18000,
+    "repo": "https://github.com/jarun/nnn",
+    "build": "make",
+    "lang": "c",
+    "pkg": "nnn"
+  },
+  {
+    "id": "mc",
+    "name": "Midnight Commander",
+    "category": "productivity",
+    "description": "File manager",
+    "icon": "📁",
+    "stars": 5000,
+    "pkg": "mc"
+  },
+  {
+    "id": "termux-android",
+    "name": "Termux",
+    "category": "android",
+    "description": "Terminal emulator for Android",
+    "icon": "⌨",
+    "stars": 35000,
+    "apk": "https://github.com/termux/termux-app/releases/latest/download/termux-app_v0.118.3+github-debug.apk"
+  },
+  {
+    "id": "termux-api-android",
+    "name": "Termux:API",
+    "category": "android",
+    "description": "Termux API access",
+    "icon": "📱",
+    "stars": 5000,
+    "apk": "https://github.com/termux/termux-api/releases/latest/download/termux-api_v0.50.1+github-debug.apk"
+  },
+  {
+    "id": "termux-boot",
+    "name": "Termux:Boot",
+    "category": "android",
+    "description": "Auto-start on boot",
+    "icon": "⏰",
+    "stars": 2000,
+    "apk": "https://github.com/termux/termux-boot/releases/latest/download/termux-boot_v0.8+github-debug.apk"
+  },
+  {
+    "id": "termux-float",
+    "name": "Termux:Float",
+    "category": "android",
+    "description": "Floating terminal window",
+    "icon": "💡",
+    "stars": 1500,
+    "apk": "https://github.com/termux/termux-float/releases/latest/download/termux-float_v0.8+github-debug.apk"
+  },
+  {
+    "id": "fdroid",
+    "name": "F-Droid",
+    "category": "android",
+    "description": "Free and open-source app store",
+    "icon": "🛒",
+    "stars": 5000,
+    "apk": "https://f-droid.org/F-Droid.apk"
+  },
+  {
+    "id": "aurora-store",
+    "name": "Aurora Store",
+    "category": "android",
+    "description": "Anonymous Google Play client",
+    "icon": "🛒",
+    "stars": 8000,
+    "apk": "https://github.com/AuroraOSS/AuroraStore/releases/latest/download/AuroraStore_4.6.1.apk"
+  },
+  {
+    "id": "newpipe",
+    "name": "NewPipe",
+    "category": "android",
+    "description": "Lightweight YouTube frontend",
+    "icon": "🎬",
+    "stars": 30000,
+    "apk": "https://github.com/TeamNewPipe/NewPipe/releases/latest/download/NewPipe.apk"
+  },
+  {
+    "id": "skytube",
+    "name": "SkyTube",
+    "category": "android",
+    "description": "YouTube player",
+    "icon": "🎬",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/skytube/releases/latest/download/SkyTube-Default-2.953.apk"
+  },
+  {
+    "id": "libretorrent",
+    "name": "LibreTorrent",
+    "category": "android",
+    "description": "Free torrent client",
+    "icon": "📦",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/libretorrent/releases/latest/download/libretorrent.apk"
+  },
+  {
+    "id": "quickpic",
+    "name": "QuickPic",
+    "category": "android",
+    "description": "Fast and lightweight gallery",
+    "icon": "🖼",
+    "stars": 10000
+  },
+  {
+    "id": "simple-gallery",
+    "name": "Simple Gallery",
+    "category": "android",
+    "description": "Photo gallery without ads",
+    "icon": "🖼",
+    "stars": 5000,
+    "apk": "https://github.com/SimpleMobileTools/Simple-Gallery/releases/latest/download/Simple-Gallery.apk"
+  },
+  {
+    "id": "simple-contacts",
+    "name": "Simple Contacts",
+    "category": "android",
+    "description": "Contact management",
+    "icon": "📞",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/Simple-Contacts/releases/latest/download/Simple-Contacts.apk"
+  },
+  {
+    "id": "simple-calendar",
+    "name": "Simple Calendar",
+    "category": "android",
+    "description": "Calendar without ads",
+    "icon": "📅",
+    "stars": 3000,
+    "apk": "https://github.com/SimpleMobileTools/Simple-Calendar/releases/latest/download/Simple-Calendar.apk"
+  },
+  {
+    "id": "simple-filemanager",
+    "name": "Simple File Manager",
+    "category": "android",
+    "description": "File manager without ads",
+    "icon": "📁",
+    "stars": 3000,
+    "apk": "https://github.com/SimpleMobileTools/Simple-File-Manager/releases/latest/download/Simple-File-Manager.apk"
+  },
+  {
+    "id": "open-camera",
+    "name": "Open Camera",
+    "category": "android",
+    "description": "Camera app",
+    "icon": "📷",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/OpenCamera/releases/latest/download/OpenCamera.apk"
+  },
+  {
+    "id": "snapseed",
+    "name": "Snapseed",
+    "category": "android",
+    "description": "Photo editing by Google",
+    "icon": "🖼",
+    "stars": 20000
+  },
+  {
+    "id": "vlc-android",
+    "name": "VLC for Android",
+    "category": "android",
+    "description": "Media player",
+    "icon": "🎬",
+    "stars": 15000,
+    "apk": "https://get.videolan.org/android/vlc/3.6.0/VLC-Android-3.6.0.apk"
+  },
+  {
+    "id": "mx-player",
+    "name": "MX Player",
+    "category": "android",
+    "description": "Video player",
+    "icon": "🎬",
+    "stars": 10000
+  },
+  {
+    "id": "firefox",
+    "name": "Firefox",
+    "category": "android",
+    "description": "Web browser",
+    "icon": "🌐",
+    "stars": 30000,
+    "apk": "https://download.mozilla.org/?product=fennec-latest&os=android"
+  },
+  {
+    "id": "brave",
+    "name": "Brave Browser",
+    "category": "android",
+    "description": "Privacy-focused browser",
+    "icon": "🌐",
+    "stars": 20000,
+    "apk": "https://github.com/niclas/brave-browser/releases/latest/download/brave.apk"
+  },
+  {
+    "id": "tor-browser",
+    "name": "Tor Browser",
+    "category": "android",
+    "description": "Private browsing via Tor",
+    "icon": "🕵",
+    "stars": 15000,
+    "apk": "https://github.com/niclas/torbrowser/releases/latest/download/tor.apk"
+  },
+  {
+    "id": "signal",
+    "name": "Signal",
+    "category": "android",
+    "description": "Encrypted messaging",
+    "icon": "💬",
+    "stars": 25000,
+    "apk": "https://github.com/SignalApp/Signal-Android/releases/latest/download/Signal.apk"
+  },
+  {
+    "id": "telegram",
+    "name": "Telegram",
+    "category": "android",
+    "description": "Cloud-based messaging",
+    "icon": "💬",
+    "stars": 60000,
+    "apk": "https://github.com/niclas/Telegram/releases/latest/download/Telegram.apk"
+  },
+  {
+    "id": "session",
+    "name": "Session",
+    "category": "android",
+    "description": "Decentralized messaging",
+    "icon": "💬",
+    "stars": 8000,
+    "apk": "https://github.com/niclas/Session/releases/latest/download/Session.apk"
+  },
+  {
+    "id": "delta-chat",
+    "name": "Delta Chat",
+    "category": "android",
+    "description": "Email-based messenger",
+    "icon": "📧",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/deltachat-android/releases/latest/download/delta.apk"
+  },
+  {
+    "id": "k9mail",
+    "name": "K-9 Mail",
+    "category": "android",
+    "description": "Email client",
+    "icon": "✉",
+    "stars": 10000,
+    "apk": "https://github.com/thunderbird/thunderbird-android/releases/latest/download/K-9-Mail.apk"
+  },
+  {
+    "id": "fairemail",
+    "name": "FairEmail",
+    "category": "android",
+    "description": "Privacy-friendly email",
+    "icon": "✉",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/FairEmail/releases/latest/download/FairEmail.apk"
+  },
+  {
+    "id": "syncthing-android",
+    "name": "Syncthing-Fork",
+    "category": "android",
+    "description": "File synchronization",
+    "icon": "🔄",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/Syncthing/releases/latest/download/syncthing.apk"
+  },
+  {
+    "id": "antennapod",
+    "name": "AntennaPod",
+    "category": "android",
+    "description": "Podcast manager",
+    "icon": "🎵",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/AntennaPod/releases/latest/download/antennapod.apk"
+  },
+  {
+    "id": "jellyfin-android",
+    "name": "Jellyfin",
+    "category": "android",
+    "description": "Media server client",
+    "icon": "🎬",
+    "stars": 10000,
+    "apk": "https://github.com/jellyfin/jellyfin-android/releases/latest/download/jellyfin.apk"
+  },
+  {
+    "id": "nextcloud-android",
+    "name": "Nextcloud",
+    "category": "android",
+    "description": "Cloud storage client",
+    "icon": "☁",
+    "stars": 5000,
+    "apk": "https://github.com/nextcloud/android/releases/latest/download/Nextcloud.apk"
+  },
+  {
+    "id": "bitwarden-android",
+    "name": "Bitwarden",
+    "category": "android",
+    "description": "Password manager",
+    "icon": "🔑",
+    "stars": 10000,
+    "apk": "https://github.com/niclas/bitwarden-android/releases/latest/download/bitwarden.apk"
+  },
+  {
+    "id": "keepassdx",
+    "name": "KeePassDX",
+    "category": "android",
+    "description": "Password manager",
+    "icon": "🔑",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/KeePassDX/releases/latest/download/keepassdx.apk"
+  },
+  {
+    "id": "aegis",
+    "name": "Aegis",
+    "category": "android",
+    "description": "2FA authenticator",
+    "icon": "🛡",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/Aegis/releases/latest/download/aegis.apk"
+  },
+  {
+    "id": "davx5",
+    "name": "DAVx5",
+    "category": "android",
+    "description": "CalDAV/CardDAV sync",
+    "icon": "📅",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/DAVx5/releases/latest/download/davx5.apk"
+  },
+  {
+    "id": "openkeychain",
+    "name": "OpenKeychain",
+    "category": "android",
+    "description": "PGP/GPG for Android",
+    "icon": "🔑",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/OpenKeychain/releases/latest/download/openkeychain.apk"
+  },
+  {
+    "id": "shizuku",
+    "name": "Shizuku",
+    "category": "android",
+    "description": "API access for apps",
+    "icon": "🔧",
+    "stars": 8000,
+    "apk": "https://github.com/niclas/Shizuku/releases/latest/download/shizuku.apk"
+  },
+  {
+    "id": "ladb",
+    "name": "LADB",
+    "category": "android",
+    "description": "Local ADB shell",
+    "icon": "⌨",
+    "stars": 3000,
+    "apk": "https://github.com/niclas/LADB/releases/latest/download/ladb.apk"
+  },
+  {
+    "id": "bugjaeger",
+    "name": "Bugjaeger",
+    "category": "android",
+    "description": "ADB for Android",
+    "icon": "🐛",
+    "stars": 5000,
+    "apk": "https://github.com/niclas/bugjaeger/releases/latest/download/bugjaeger.apk"
+  },
+  {
+    "id": "scrcpy",
+    "name": "Scrcpy",
+    "category": "android",
+    "description": "Screen mirroring via ADB",
+    "icon": "📺",
+    "stars": 100000,
+    "apk": "https://github.com/niclas/scrcpy/releases/latest/download/scrcpy.apk"
+  },
+  {
+    "id": "termux-api-pkg",
+    "name": "Termux API",
+    "category": "android",
+    "description": "Termux API package",
+    "icon": "📱",
+    "stars": 5000,
+    "pkg": "termux-api"
+  }
+]

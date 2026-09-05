@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0f0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TermuX Hub — Device Manager</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect rx='22' width='100' height='100' fill='url(%23g)'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>T</text></svg>">
+<link rel="stylesheet" href="https://opensource.josebamirena.com/fx/2.0.0/dist/css/fx-mini.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Auth Gate -->
+  <div id="gate" class="gate">
+    <div class="gate-bg"></div>
+    <div class="gate-card" data-reveal="zoom">
+      <div class="gate-logo"><div class="gate-logo-icon">T</div></div>
+      <h1>TermuX Hub</h1>
+      <p class="gate-sub" id="gate-subtitle">Sign in to your device</p>
+      <form id="gate-form" autocomplete="off">
+        <div id="gate-user-row" class="gate-row" style="display:none">
+          <label>Username</label>
+          <input id="gate-username" type="text" placeholder="username" autocomplete="username">
+        </div>
+        <div class="gate-row">
+          <label id="gate-pw-label">Password</label>
+          <input id="gate-password" type="password" placeholder="password" autocomplete="current-password">
+        </div>
+        <div id="gate-err" class="err"></div>
+        <button type="submit" class="btn primary full" id="gate-btn">Sign In</button>
+        <p class="gate-toggle" id="gate-toggle"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dash" class="dash hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-logo">T</div><span>TermuX Hub</span></div>
+      <nav id="nav"></nav>
+      <div class="sidebar-foot">
+        <div class="con"><span class="dot"></span><span id="con-txt">Connected</span></div>
+        <button id="logout" class="btn ghost sm full">Sign Out</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <h2 id="view-title">Dashboard</h2>
+        <div class="topbar-right">
+          <span id="user-badge" class="user-badge"></span>
+          <button id="refresh" class="btn ghost sm">&#8635;</button>
+        </div>
+      </header>
+      <div id="views"></div>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+</div>
+<script src="/assets/app.js"></script>
+</body>
+</html>
