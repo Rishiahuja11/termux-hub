@@ -112,13 +112,18 @@ function getBuildLog(id) { const f = path.join(CONFIG.STORE_DIR, id, 'build.log'
 const DEFAULT_CONFIG = {
   adbTarget: '',
   sshPassword: '',
-  streamBitrate: 2000000,
+  streamBitrate: 4000000,
   streamResolution: '720x1280',
   streamFps: 20,
   streamQuality: 8,
   hostname: '0.0.0.0',
   port: 8900,
   adminNote: '',
+  rootMode: false,
+  wakeScreenOnStream: true,
+  screenRecordTimeout: 180,
+  autoReconnectAdb: true,
+  adbReconnectInterval: 30,
 };
 function loadConfig() {
   try { return { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG.CONFIG_FILE, 'utf8')) }; }
@@ -1014,7 +1019,9 @@ async function route(req, res) {
     const sh = parseInt(resParts[1]) || 1280;
 
     // Wake screen
-    try { await runCmd(`"${ADB_BIN}" shell input keyevent KEYCODE_WAKEUP`, 3); } catch (_) {}
+    if (cfg.wakeScreenOnStream !== false) {
+      try { await runCmd(`"${ADB_BIN}" shell input keyevent KEYCODE_WAKEUP`, 3); } catch (_) {}
+    }
 
     res.writeHead(200, {
       'Content-Type': 'multipart/x-mixed-replace; boundary=' + boundary,
@@ -1028,7 +1035,8 @@ async function route(req, res) {
 
     // Single shell command: adb screenrecord | ffmpeg -> MJPEG on pipe:1
     const FFMPEG = '/data/data/com.termux/files/usr/bin/ffmpeg';
-    const pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=180 - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+    const recordTimeout = cfg.screenRecordTimeout || 180;
+    const pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
 
     const SOI = Buffer.from([0xFF, 0xD8]);
     const EOI = Buffer.from([0xFF, 0xD9]);
@@ -1524,7 +1532,7 @@ async function route(req, res) {
     const current = loadConfig();
     const updated = { ...current };
     // Only allow updating known fields
-    const allowed = ['adbTarget', 'sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote'];
+    const allowed = ['adbTarget', 'sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
     for (const k of allowed) { if (body[k] !== undefined) updated[k] = body[k]; }
     saveConfig(updated);
     log(`config-update ip=${ip} fields=${Object.keys(body).join(',')}`);

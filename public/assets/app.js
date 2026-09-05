@@ -855,6 +855,31 @@ async function renderSettings(el) {
         </div>
       </div>
     </div>
+    <div class="ctrl-section" style="margin-bottom:16px">
+      <h3>Device Options</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="cfg-root-mode" ${cfg.rootMode?'checked':''} style="width:auto">
+          <label for="cfg-root-mode" style="font-size:13px;cursor:pointer">Root mode (direct screenrecord, no ADB needed)</label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="cfg-wake-screen" ${cfg.wakeScreenOnStream!==false?'checked':''} style="width:auto">
+          <label for="cfg-wake-screen" style="font-size:13px;cursor:pointer">Wake screen before streaming</label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="cfg-auto-reconnect" ${cfg.autoReconnectAdb!==false?'checked':''} style="width:auto">
+          <label for="cfg-auto-reconnect" style="font-size:13px;cursor:pointer">Auto-reconnect ADB</label>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--fg2)">ADB Reconnect Interval (seconds)</label>
+          <input class="inp" id="cfg-reconnect-interval" type="number" value="${cfg.adbReconnectInterval || 30}" min="5" max="300" style="width:100%;margin-top:4px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--fg2)">Screen Record Timeout (seconds, 0=unlimited)</label>
+          <input class="inp" id="cfg-record-timeout" type="number" value="${cfg.screenRecordTimeout || 180}" min="0" max="1800" style="width:100%;margin-top:4px">
+        </div>
+      </div>
+    </div>
     <div style="display:flex;gap:10px">
       <button class="btn primary" onclick="saveConfig()">Save Settings</button>
       <button class="btn ghost" onclick="renderSettings($('#views'))">Reset</button>
@@ -872,6 +897,11 @@ async function saveConfig() {
     streamFps: parseInt($('#cfg-fps')?.value || '15'),
     streamBitrate: parseInt($('#cfg-bitrate')?.value || '2000000'),
     streamQuality: parseInt($('#cfg-quality')?.value || '8'),
+    rootMode: $('#cfg-root-mode')?.checked || false,
+    wakeScreenOnStream: $('#cfg-wake-screen')?.checked !== false,
+    autoReconnectAdb: $('#cfg-auto-reconnect')?.checked !== false,
+    adbReconnectInterval: parseInt($('#cfg-reconnect-interval')?.value || '30'),
+    screenRecordTimeout: parseInt($('#cfg-record-timeout')?.value || '180'),
   };
   try {
     const r = await api('/api/config', { method: 'POST', body: JSON.stringify(cfg) });
