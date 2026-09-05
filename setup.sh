@@ -94,13 +94,15 @@ fi
 echo -e "${YELLOW}[5/6] Creating admin account...${NC}"
 
 if [ ! -s "$API_DIR/users.json" ]; then
+  # Generate real scrypt hash for default admin/admin account
   SALT=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+  HASH=$(node -e "console.log(require('crypto').scryptSync('admin','$SALT',64).toString('hex'))" 2>/dev/null || echo "placeholder")
   cat > "$API_DIR/users.json" << ENDJSON
 {
   "admin": {
     "salt": "$SALT",
-    "hash": "placeholder",
-    "created": 0
+    "hash": "$HASH",
+    "created": $(date +%s)000
   }
 }
 ENDJSON
