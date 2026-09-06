@@ -992,15 +992,22 @@ async function route(req, res) {
 
   if (pathname === '/api/android/status' && method === 'GET') {
     const hasShell = rishConnected() || adbConnected();
-    const method = rishConnected() ? 'rish' : adbConnected() ? 'adb' : 'none';
-    const screencap = hasShell ? await shellCmd('screencap -p | wc -c', 10) : null;
-    const canScreencap = screencap && parseInt((screencap.stdout || '').trim()) > 1000;
-    const inputTest = hasShell ? await shellCmd('cmd statusbar expand-notifications 2>&1 || echo no-input', 5) : null;
-    const canInput = hasShell && inputTest && !inputTest.stdout.includes('SecurityException');
-    const brightness = hasShell ? await shellCmd('settings get system screen_brightness 2>&1', 5) : null;
-    const canDisplay = brightness && !brightness.stdout.includes('Exception');
-    const pkgCount = hasShell ? await shellCmd('pm list packages -3 2>/dev/null | wc -l', 10) : null;
-    return sendJson(res, 200, { ok: true, method, adb: hasShell, canScreencap, canInput, canDisplay, brightness: canDisplay ? brightness.stdout.trim() : null, thirdPartyApps: pkgCount ? parseInt(pkgCount.stdout.trim()) : 0 });
+    const methodUsed = rishConnected() ? 'rish' : adbConnected() ? 'adb' : 'none';
+    if (!hasShell) {
+      return sendJson(res, 200, { ok: true, method: 'none', adb: false, canScreencap: false, canInput: false, canDisplay: false, brightness: null, thirdPartyApps: 0 });
+    }
+    // Batch all checks into a single rish call to avoid Shizuku timeouts
+    const batch = await shellCmd('echo "===SC===" && screencap -p | wc -c && echo "===IN===" && cmd statusbar expand-notifications 2>&1 || echo no-input && echo "===BR===" && settings get system screen_brightness 2>&1 && echo "===PK===" && pm list packages -3 2>/dev/null | wc -l', 15);
+    const output = batch.stdout || '';
+    const scMatch = output.match(/===SC===\n(\d+)/);
+    const canScreencap = scMatch && parseInt(scMatch[1]) > 1000;
+    const canInput = !output.includes('SecurityException') && !output.includes('no-input');
+    const brMatch = output.match(/===BR===\n(\d+)/);
+    const canDisplay = brMatch !== null;
+    const brightness = brMatch ? brMatch[1] : null;
+    const pkMatch = output.match(/===PK===\n(\d+)/);
+    const thirdPartyApps = pkMatch ? parseInt(pkMatch[1]) : 0;
+    return sendJson(res, 200, { ok: true, method: methodUsed, adb: hasShell, canScreencap, canInput, canDisplay, brightness, thirdPartyApps });
   }
 
   if (pathname === '/api/android/screenshot' && method === 'GET') {
