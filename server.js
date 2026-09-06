@@ -7,7 +7,7 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const zlib = require('zlib');
-const { execFile, exec, spawn } = require('child_process');
+const { execFile, spawn } = require('child_process');
 
 const CONFIG = {
   HOST: process.env.ADMIN_HOST || '0.0.0.0',
@@ -567,11 +567,11 @@ function readBody(req, limit) {
     req.on('error', rej);
   });
 }
-const EXTRA_ALLOWED_ROOTS = ['/sdcard', '/storage/emulated/0', '/data/data/com.termux/files/usr', '/tmp'];
+const EXTRA_ALLOWED_ROOTS = ['/sdcard', '/storage/emulated/0', '/data/data/com.termux/files/usr'];
 function isWithinRoot(p) {
   const root = os.homedir();
   let r;
-  try { r = fs.realpathSync(path.resolve(p)); } catch (_) { r = path.resolve(p); }
+  try { r = fs.realpathSync(path.resolve(p)); } catch (_) { return false; }
   for (const allowed of [root, ...EXTRA_ALLOWED_ROOTS]) {
     let allowedReal;
     try { allowedReal = fs.realpathSync(allowed); } catch (_) { allowedReal = allowed; }
@@ -934,8 +934,8 @@ async function route(req, res) {
     const op = action === 'remove' ? 'remove' : action === 'update' ? 'update' : 'install';
     let cmd;
     if (op === 'update') cmd = 'pkg update 2>&1';
-    else if (op === 'remove') cmd = 'pkg remove -y ' + name + ' 2>&1';
-    else cmd = 'pkg install -y ' + name + ' 2>&1';
+    else if (op === 'remove') cmd = 'pkg remove -y ' + shellQuote(name) + ' 2>&1';
+    else cmd = 'pkg install -y ' + shellQuote(name) + ' 2>&1';
     const logLine = `[${new Date().toISOString()}] ${cmd}\n`;
     fs.appendFileSync(PKG_LOG, logLine);
     const r = await runCmd(cmd, CONFIG.MAX_PKG_SECONDS);
@@ -1038,7 +1038,7 @@ async function route(req, res) {
   if (pathname === '/api/android/stream' && method === 'GET') {
     const cfg = loadConfig();
     const boundary = 'frame';
-    const fps = cfg.streamFps || 30;
+    const fps = cfg.streamFps || 20;
     const bitrate = cfg.streamBitrate || 4000000;
     const resParts = (cfg.streamResolution || '720x1280').split('x');
     const sw = parseInt(resParts[0]) || 720;
@@ -1130,6 +1130,7 @@ async function route(req, res) {
         p.on('error', () => { alive = false; });
         pipeline = p;
       }
+      return pipeline;
     };
 
     const startFfmpeg = () => {
@@ -1535,17 +1536,17 @@ async function route(req, res) {
       try {
         const isPkg = !!app.pkg;
         if (isPkg) {
-          const r = await runCmd('pkg install -y ' + app.pkg, CONFIG.MAX_BUILD_SECONDS);
+          const r = await runCmd('pkg install -y ' + shellQuote(app.pkg), CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
           buildProc.exitCode = r.exitCode;
           ws.write('\nexit ' + r.exitCode + '\n');
         } else {
           ws.write('=== Cloning ' + app.repo + ' ===\n');
-          await runCmd('git clone --depth 1 ' + app.repo + ' ' + appDir + '/src', CONFIG.MAX_BUILD_SECONDS);
+          await runCmd('git clone --depth 1 ' + shellQuote(app.repo) + ' ' + shellQuote(appDir + '/src'), CONFIG.MAX_BUILD_SECONDS);
           ws.write('=== Building ===\n');
           const buildEnv = `HOME="${os.homedir()}" PREFIX="${os.homedir()}/.termux/usr" PATH="${os.homedir()}/.termux/usr/bin:$PATH"`;
-          const buildCmd = buildEnv + ' bash -c "cd ' + appDir + '/src && ' + (app.build || 'echo no-build-command') + '"';
+          const buildCmd = buildEnv + ' bash -c "cd ' + shellQuote(appDir + '/src') + ' && ' + (shellQuote(app.build || 'echo no-build-command')) + '"';
           const r = await runCmd(buildCmd, CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
@@ -1583,7 +1584,7 @@ async function route(req, res) {
     const installed = loadInstalled();
     delete installed[id];
     saveInstalled(installed);
-    if (app.pkg) await runCmd('pkg remove -y ' + app.pkg + ' 2>/dev/null || true', 60);
+    if (app.pkg) await runCmd('pkg remove -y ' + shellQuote(app.pkg) + ' 2>/dev/null || true', 60);
     return sendJson(res, 200, { ok: true, id, removed: true });
   }
 

@@ -41,7 +41,7 @@ async function api(path, opts) {
   } catch (e) { if (e.message !== 'unauthorized') toast('Network error: ' + e.message, 'error'); throw e; }
 }
 
-async function execCmd(cmd) { return (await api('/exec', { method: 'POST', body: JSON.stringify({ cmd }) })).output || ''; }
+async function execCmd(cmd) { return (await api('/exec', { method: 'POST', body: JSON.stringify({ cmd }) })).stdout || ''; }
 
 // ── Auth ──
 function showGate() {
@@ -260,7 +260,7 @@ async function fmRender() {
     const parts = state.fmPath.startsWith(fmRoot) ? state.fmPath.slice(fmRoot.length).split('/').filter(Boolean) : state.fmPath.split('/').filter(Boolean);
     parts.forEach((p) => {
       cum += '/' + p;
-      bc.innerHTML += `<span onclick="fmGoto('${cum}')">${escH(p)}</span>`;
+      bc.innerHTML += `<span onclick="fmGoto('${escA(cum)}')">${escH(p)}</span>`;
     });
   }
   // List

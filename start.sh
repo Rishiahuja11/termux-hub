@@ -41,7 +41,7 @@ if [ -f "$PIDFILE" ]; then
   rm -f "$PIDFILE"
 fi
 
-# Also kill any orphan node server.js processes
+# Also kill any orphan node server.js processes from adminapi
 pkill -f "node server.js" 2>/dev/null || true
 sleep 1
 
@@ -98,7 +98,8 @@ while [ $WAIT -lt $MAX_WAIT ]; do
   fi
 
   # Try to connect
-  if curl -sk "https://localhost:8900/api/health" >/dev/null 2>&1; then
+  HEALTH_PORT=$(node -e "try{const c=require('$DIR/config.json');console.log(c.port||8900)}catch(e){console.log(8900)}" 2>/dev/null || echo "8900")
+  if curl -sk "https://localhost:$HEALTH_PORT/api/health" >/dev/null 2>&1; then
     echo ""
     echo ""
 

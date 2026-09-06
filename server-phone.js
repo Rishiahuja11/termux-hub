@@ -431,7 +431,7 @@ async function apkpureGetAppVersion(pkg) {
 async function searchAPKPure(q) {
   const strategies = [
     async () => {
-      const r = await runCmd(`curl -sL "https://lite.duckduckgo.com/lite/?q=apkpure.com+${q.replace(/'/g, '')}" -H "User-Agent: Mozilla/5.0" 2>&1`, 12);
+      const r = await runCmd(`curl -sL "https://lite.duckduckgo.com/lite/?q=apkpure.com+${q.replace(/[^a-zA-Z0-9+ ]/g, '')}" -H "User-Agent: Mozilla/5.0" 2>&1`, 12);
       const pkgs = new Set();
       for (const m of (r.stdout || '').matchAll(/apkpure\.com\/[a-z0-9-]+\/([a-z][a-z0-9_.]+)/gi)) {
         if (m[1].includes('.') && /^[a-z]/.test(m[1]) && m[1].length < 80) pkgs.add(m[1]);
@@ -460,6 +460,20 @@ async function searchAPKPure(q) {
     }
   }
   return results;
+}
+
+async function gatherUpToDownDetail(urlStr) {
+  try {
+    const html = await httpGetSimple(urlStr, 12000);
+    const name = (html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || [])[1] || '';
+    const version = (html.match(/class="version">([^<]+)/i) || [])[1] || '';
+    const size = (html.match(/class="size">([^<]+)/i) || [])[1] || '';
+    const icon = (html.match(/class="package-image"[^>]*>[\s\S]*?src="([^"]+)"/i) || [])[1] || '';
+    const dl = (html.match(/href="(https?:\/\/[^"]*\.apk)"/i) || [])[1] || '';
+    return { name: name.trim(), version: version.trim(), size: size.trim(), icon, apkUrl: dl };
+  } catch (_) {
+    return { name: '', version: '', size: '', icon: '', apkUrl: '' };
+  }
 }
 
 async function gatherAPKPureDetail(id) {
@@ -1072,8 +1086,9 @@ async function route(req, res) {
     let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { return sendJson(res, 400, { ok: false, error: 'invalid json' }); }
     const pkg = body.package;
     if (!pkg) return sendJson(res, 400, { ok: false, error: 'package required' });
+    if (!/^[a-zA-Z0-9._]+$/.test(pkg)) return sendJson(res, 400, { ok: false, error: 'invalid package name' });
     log(`android-launch pkg=${pkg} ip=${ip}`);
-    const r = await runCmd(`adb shell monkey -p ${pkg} -c android.intent.category.LAUNCHER 1 2>&1`, 10);
+    const r = await runCmd(`adb shell monkey -p ${shellQuote(pkg)} -c android.intent.category.LAUNCHER 1 2>&1`, 10);
     return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, output: r.stdout });
   }
 
@@ -1081,8 +1096,9 @@ async function route(req, res) {
     let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { return sendJson(res, 400, { ok: false, error: 'invalid json' }); }
     const pkg = body.package;
     if (!pkg) return sendJson(res, 400, { ok: false, error: 'package required' });
+    if (!/^[a-zA-Z0-9._]+$/.test(pkg)) return sendJson(res, 400, { ok: false, error: 'invalid package name' });
     log(`android-uninstall pkg=${pkg} ip=${ip}`);
-    const r = await runCmd(`adb shell pm uninstall ${pkg} 2>&1`, 30);
+    const r = await runCmd(`adb shell pm uninstall ${shellQuote(pkg)} 2>&1`, 30);
     return sendJson(res, 200, { ok: true, package: pkg, output: r.stdout + r.stderr });
   }
 
@@ -1313,6 +1329,7 @@ async function route(req, res) {
     if (!id) return sendJson(res, 400, { ok: false, error: 'id required' });
     if (id.startsWith('pkg:')) {
       const pkgName = id.replace('pkg:', '');
+      if (!/^[a-z0-9][a-z0-9._+-]+$/.test(pkgName)) return sendJson(res, 400, { ok: false, error: 'invalid package name' });
       if (activeBuilds.has(id)) return sendJson(res, 409, { ok: false, error: 'already building' });
       log(`termux-pkg-install pkg=${pkgName} ip=${ip}`);
       const buildProc = { output: '', killed: false };
@@ -1323,7 +1340,7 @@ async function route(req, res) {
       const ws = fs.createWriteStream(logFile);
       const doBuild = async () => {
         try {
-          const r = await runCmd('pkg install -y ' + pkgName, CONFIG.MAX_BUILD_SECONDS);
+          const r = await runCmd('pkg install -y ' + shellQuote(pkgName), CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
           buildProc.exitCode = r.exitCode;
@@ -1349,7 +1366,7 @@ async function route(req, res) {
     if (!app) return sendJson(res, 404, { ok: false, error: 'app not found' });
     if (activeBuilds.has(id)) return sendJson(res, 409, { ok: false, error: 'already building' });
     const installed = loadInstalled();
-    if (installed[id] && installed[id].installed) return sendJson(res, 209, { ok: false, error: 'already installed' });
+    if (installed[id] && installed[id].installed) return sendJson(res, 409, { ok: false, error: 'already installed' });
     log(`store-install id=${id} ip=${ip}`);
     const appDir = path.join(CONFIG.STORE_DIR, id);
     const logFile = path.join(appDir, 'build.log');
@@ -1461,7 +1478,7 @@ async function route(req, res) {
 
   if (pathname === '/auth' && method === 'GET') {
     log(`auth-ok ip=${ip}`);
-    return sendJson(res, 200, { ok: true, user: process.env.USER || os.userInfo().username, ip, hostname: os.hostname(), tokenPrefix: TOKEN.slice(0, 4) });
+    return sendJson(res, 200, { ok: true, user: process.env.USER || os.userInfo().username, ip, hostname: os.hostname() });
   }
 
   return sendJson(res, 404, { ok: false, error: 'not found' });
