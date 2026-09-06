@@ -562,27 +562,34 @@ async function renderAndroid(el) {
   </div>`;
   let st = { adb: false };
   try { st = await api('/api/android/status'); } catch (_) {}
-  let savedTarget = '';
-  try { const cfg = await api('/api/config'); savedTarget = cfg.config?.adbTarget || ''; } catch (_) {}
+  let shizuku = { running: false, port: 0, connected: false };
+  try { shizuku = await api('/api/android/shizuku/status'); } catch (_) {}
   const ctrl = $('#android-ctrl');
   if (!st.adb) {
+    const shizukuStatus = shizuku.running
+      ? `<span style="color:var(--success)">&#9679; Shizuku running on port ${shizuku.port}</span>`
+      : `<span style="color:var(--warn)">&#9679; Shizuku not detected</span>`;
     ctrl.innerHTML = `
       <div class="ctrl-section" style="border-color:var(--warn)">
         <h3 style="color:var(--warn)">ADB not connected</h3>
-        <p style="font-size:13px;color:var(--fg2);margin-bottom:12px">Live screen and remote input need wireless debugging.</p>
-        <div style="margin-bottom:12px">
-          <label style="font-size:12px;color:var(--fg2)">Connect (pair first if needed)</label>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <input class="inp" id="adb-target" placeholder="Host:Port (e.g. 192.168.1.100:5555)" value="${savedTarget}">
-            <button class="btn primary sm" onclick="adbConnect()">Connect</button>
-          </div>
+        <p style="font-size:13px;color:var(--fg2);margin-bottom:12px">Live screen and remote input need ADB access via Shizuku.</p>
+        <div style="margin-bottom:12px;padding:10px;background:var(--bg2);border-radius:8px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Shizuku Status: ${shizukuStatus}</div>
+          <ol style="font-size:11px;color:var(--fg2);margin:0;padding-left:16px;line-height:1.8">
+            <li>Install <a href="https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api" target="_blank" style="color:var(--accent)">Shizuku</a> from Play Store</li>
+            <li>Open Shizuku → tap <b>Start</b> (via Wireless Debugging)</li>
+            <li>Once started, click <b>Connect</b> below</li>
+          </ol>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn primary sm" onclick="shizukuConnect()">Connect via Shizuku</button>
+          <button class="btn ghost sm" onclick="renderAndroid($('#views'))">Refresh</button>
         </div>
         <details style="margin-bottom:12px">
-          <summary style="font-size:12px;color:var(--fg2);cursor:pointer">Pair with code (if first time or re-pairing)</summary>
+          <summary style="font-size:12px;color:var(--fg2);cursor:pointer">Manual ADB connect (advanced)</summary>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input class="inp" id="adb-pair-host" placeholder="Pairing host:port">
-            <input class="inp" id="adb-pair-code" placeholder="6-digit code" style="max-width:120px">
-            <button class="btn sm ghost" onclick="adbPair()">Pair</button>
+            <input class="inp" id="adb-target" placeholder="Host:Port (e.g. 192.168.1.100:5555)">
+            <button class="btn primary sm" onclick="adbConnect()">Connect</button>
           </div>
         </details>
       </div>
@@ -671,15 +678,22 @@ async function adbConnect() {
   } catch (_) { toast('Failed', 'error'); }
 }
 
-async function adbPair() {
-  const host = $('#adb-pair-host')?.value?.trim();
-  const code = $('#adb-pair-code')?.value?.trim();
-  if (!host || !code) { toast('Enter pairing host:port and code', 'error'); return; }
-  toast('Pairing with ' + host + '...', 'info');
+async function shizukuConnect() {
+  toast('Connecting via Shizuku...', 'info');
   try {
-    const r = await api('/api/android/adb-pair', { method: 'POST', body: JSON.stringify({ host, code }) });
-    toast(r.ok ? 'Paired! Now click Connect' : (r.error || 'Pairing failed'), r.ok ? 'success' : 'error');
-  } catch (_) { toast('Pairing failed', 'error'); }
+    const r = await api('/api/android/shizuku/connect', { method: 'POST', body: JSON.stringify({}) });
+    toast(r.ok ? 'Connected via Shizuku' : (r.error || 'Shizuku not running - start it first'), r.ok ? 'success' : 'error');
+    if (r.ok && state.view === 'android') renderAndroid($('#views'));
+  } catch (_) { toast('Failed', 'error'); }
+}
+
+async function shizukuDisconnect() {
+  toast('Disconnecting...', 'info');
+  try {
+    await api('/api/android/shizuku/disconnect', { method: 'POST', body: JSON.stringify({}) });
+    toast('Disconnected', 'success');
+    if (state.view === 'android') renderAndroid($('#views'));
+  } catch (_) { toast('Failed', 'error'); }
 }
 
 // Stream uses 720x1280 resolution (set in screenrecord args)
@@ -801,11 +815,11 @@ async function renderSettings(el) {
       </div>
     </div>
     <div class="ctrl-section" style="margin-bottom:16px">
-      <h3>ADB Connection</h3>
+      <h3>Shizuku / ADB</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div>
-          <label style="font-size:12px;color:var(--fg2)">ADB Target (host:port)</label>
-          <input class="inp" id="cfg-adb" value="${escH(cfg.adbTarget || '')}" placeholder="192.168.1.100:5555" style="width:100%;margin-top:4px">
+          <label style="font-size:12px;color:var(--fg2)">Shizuku Port</label>
+          <input class="inp" id="cfg-shizuku-port" type="number" value="${cfg.shizukuPort || 9090}" style="width:100%;margin-top:4px">
         </div>
         <div>
           <label style="font-size:12px;color:var(--fg2)">SSH Password (for remote setup)</label>
@@ -891,7 +905,7 @@ async function renderSettings(el) {
 
 async function saveConfig() {
   const cfg = {
-    adbTarget: $('#cfg-adb')?.value?.trim() || '',
+    shizukuPort: parseInt($('#cfg-shizuku-port')?.value || '9090'),
     sshPassword: $('#cfg-ssh-pw')?.value || '',
     streamResolution: $('#cfg-resolution')?.value || '720x1280',
     streamFps: parseInt($('#cfg-fps')?.value || '15'),

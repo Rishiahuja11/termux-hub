@@ -781,7 +781,7 @@ async function renderSettings(el) {
       <div style="display:flex;flex-direction:column;gap:10px">
         <div>
           <label style="font-size:12px;color:var(--fg2)">ADB Target (host:port)</label>
-          <input class="inp" id="cfg-adb" value="${escH(cfg.adbTarget || '')}" placeholder="192.168.1.100:5555" style="width:100%;margin-top:4px">
+          <input class="inp" id="cfg-shizuku-port" type="number" value="${cfg.shizukuPort || 9090}" style="width:100%;margin-top:4px">
         </div>
         <div>
           <label style="font-size:12px;color:var(--fg2)">SSH Password (for remote setup)</label>
@@ -842,7 +842,7 @@ async function renderSettings(el) {
 
 async function saveConfig() {
   const cfg = {
-    adbTarget: $('#cfg-adb')?.value?.trim() || '',
+    shizukuPort: parseInt($('#cfg-shizuku-port')?.value || '9090'),
     sshPassword: $('#cfg-ssh-pw')?.value || '',
     streamResolution: $('#cfg-resolution')?.value || '720x1280',
     streamFps: parseInt($('#cfg-fps')?.value || '15'),

@@ -148,29 +148,20 @@ The Android Remote Control feature lets you mirror and control your phone screen
 2. Tap **Build Number** 7 times until you see "You are now a developer"
 3. Go back to **Settings** → **Developer Options**
 
-#### 2. Enable Wireless Debugging
+#### 2. Install Shizuku
 
-1. In Developer Options, enable **Wireless Debugging**
-2. Tap on **Wireless Debugging** to open its settings
-3. Note the **IP address & Port** shown (e.g., `192.168.1.100:37000`)
-4. For pairing, note the **Pairing Code** and **Pairing Port**
+1. Install **Shizuku** from [Play Store](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api)
+2. Open Shizuku app → tap **Start** (it uses Wireless Debugging internally)
+3. Wait for Shizuku to start (shows "Shizuku is running")
 
 #### 3. Connect from TermuX Hub
 
 1. Open TermuX Hub in your browser
 2. Go to the **Android** panel
-3. Click **Pair** and enter:
-   - Pairing Port (from phone's wireless debugging settings)
-   - Pairing Code (6-digit code shown on phone)
-4. After pairing, enter the ADB Target:
-   ```
-   192.168.1.100:CONNECT_PORT
-   ```
-   (Use the Connect Port from wireless debugging, NOT the pairing port)
-5. Click **Connect**
-6. You should see your phone screen in the browser
+3. Click **Connect via Shizuku**
+4. You should see your phone screen in the browser
 
-**Note:** The ADB ports change every time you restart the server or toggle wireless debugging. You'll need to re-enter the new port.
+**Note:** Shizuku handles the ADB connection automatically. No manual pairing codes needed.
 
 ### Method B: Root Access (Rooted Phones)
 
@@ -309,7 +300,7 @@ termux-hub/
 | `GET` | `/api/android/stream` | Yes | MJPEG screen stream |
 | `GET` | `/api/android/screencap` | Yes | Single screenshot (PNG) |
 | `POST` | `/api/android/input` | Yes | Send input (`tap`/`swipe`/`key`/`text`) |
-| `POST` | `/api/android/adb-pair` | Yes | Pair with ADB |
+| `POST` | `/api/android/shizuku/connect` | Yes | Connect via Shizuku |
 | `POST` | `/api/android/adb-connect` | Yes | Connect to ADB target |
 
 ### App Store

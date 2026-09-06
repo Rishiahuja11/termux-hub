@@ -110,7 +110,7 @@ function getBuildLog(id) { const f = path.join(CONFIG.STORE_DIR, id, 'build.log'
 
 // ---- Device config (web-editable) ----
 const DEFAULT_CONFIG = {
-  adbTarget: '',
+  shizukuPort: 9090,
   sshPassword: '',
   streamBitrate: 4000000,
   streamResolution: '720x1280',
@@ -136,9 +136,13 @@ const ADB_TARGET_FILE = path.join(CONFIG.CERT_DIR, 'adb-target');
 let adbTarget = '';
 try { adbTarget = fs.readFileSync(ADB_TARGET_FILE, 'utf8').trim(); } catch (_) {}
 function saveAdbTarget(t) { adbTarget = t; try { fs.writeFileSync(ADB_TARGET_FILE, t, 'utf8'); } catch (_) {} }
-// Apply saved config on startup (e.g. ADB target)
+// Apply saved config on startup
 const startupConfig = loadConfig();
-if (startupConfig.adbTarget) { adbTarget = startupConfig.adbTarget; saveAdbTarget(startupConfig.adbTarget); }
+// Legacy: migrate adbTarget to shizukuPort if present
+if (startupConfig.adbTarget && !startupConfig.shizukuPort) {
+  delete startupConfig.adbTarget;
+  saveConfig(startupConfig);
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -968,16 +972,46 @@ async function route(req, res) {
     return sendJson(res, ok ? 200 : 500, { ok, adb: ok, target, error: ok ? null : (r.stderr || 'connect failed') });
   }
 
-  if (pathname === '/api/android/adb-pair' && method === 'POST') {
-    let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { return sendJson(res, 400, { ok: false, error: 'invalid json' }); }
-    const host = String(body.host || '').trim();
-    const code = String(body.code || '').trim();
-    if (!host || !code) return sendJson(res, 400, { ok: false, error: 'host and code required' });
-    log(`adb-pair host=${host} ip=${ip}`);
-    const r = await adbCmd(['pair', host, code], 20);
-    const ok = r.exitCode === 0;
-    log(`adb-pair result=${ok} stdout=${r.stdout} stderr=${r.stderr}`);
-    return sendJson(res, ok ? 200 : 500, { ok, error: ok ? null : (r.stderr || r.stdout || 'pairing failed') });
+  // Shizuku status endpoint
+  if (pathname === '/api/android/shizuku/status' && method === 'GET') {
+    let running = false;
+    let port = 0;
+    // Check common Shizuku ports (9090 is default)
+    for (const p of [9090, 9091, 9092]) {
+      try {
+        const s = require('child_process').execSync(`timeout 1 bash -c 'echo >/dev/tcp/127.0.0.1/${p}' 2>/dev/null && echo open`, { encoding: 'utf8', timeout: 3000 });
+        if (s.includes('open')) { running = true; port = p; break; }
+      } catch (_) {}
+    }
+    const shizukuConnected = running && adbConnected();
+    return sendJson(res, 200, { ok: true, running, port, connected: shizukuConnected, adb: adbConnected() });
+  }
+
+  // Shizuku connect endpoint
+  if (pathname === '/api/android/shizuku/connect' && method === 'POST') {
+    let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { body = {}; }
+    const port = body.port || 9090;
+    log(`shizuku-connect port=${port} ip=${ip}`);
+    // Kill existing adb server first
+    adbCmd(['kill-server'], 8).catch(() => {});
+    await new Promise(r => setTimeout(r, 1000));
+    await adbCmd(['start-server'], 15);
+    const target = `127.0.0.1:${port}`;
+    const r = await adbCmd(['connect', target], 20);
+    await new Promise(r => setTimeout(r, 1000));
+    const ok = adbConnected();
+    if (ok) saveAdbTarget(target);
+    log(`shizuku-connect result=${ok} target=${target}`);
+    return sendJson(res, ok ? 200 : 500, { ok, target, error: ok ? null : (r.stderr || 'connect failed') });
+  }
+
+  // Shizuku disconnect endpoint
+  if (pathname === '/api/android/shizuku/disconnect' && method === 'POST') {
+    log(`shizuku-disconnect ip=${ip}`);
+    adbCmd(['disconnect'], 8).catch(() => {});
+    adbCmd(['kill-server'], 8).catch(() => {});
+    saveAdbTarget('');
+    return sendJson(res, 200, { ok: true });
   }
 
   if (pathname === '/api/android/status' && method === 'GET') {
@@ -1532,13 +1566,12 @@ async function route(req, res) {
     const current = loadConfig();
     const updated = { ...current };
     // Only allow updating known fields
-    const allowed = ['adbTarget', 'sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
+    const allowed = ['shizukuPort', 'sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
     for (const k of allowed) { if (body[k] !== undefined) updated[k] = body[k]; }
     saveConfig(updated);
     log(`config-update ip=${ip} fields=${Object.keys(body).join(',')}`);
-    // Apply ADB target immediately
-    if (body.adbTarget && body.adbTarget !== current.adbTarget) {
-      saveAdbTarget(body.adbTarget);
+    // Apply Shizuku port change immediately
+    if (body.shizukuPort && body.shizukuPort !== current.shizukuPort) {
       ensureAdb().catch(() => {});
     }
     return sendJson(res, 200, { ok: true, config: updated });
@@ -1578,6 +1611,21 @@ function adbConnected() {
 }
 async function ensureAdb() {
   if (adbConnected()) return true;
+  // Try Shizuku first (auto-detect on common ports)
+  for (const p of [9090, 9091, 9092]) {
+    try {
+      const s = require('child_process').execSync(`timeout 1 bash -c 'echo >/dev/tcp/127.0.0.1/${p}' 2>/dev/null && echo open`, { encoding: 'utf8', timeout: 3000 });
+      if (s.includes('open')) {
+        adbCmd(['kill-server'], 8).catch(() => {});
+        await new Promise(r => setTimeout(r, 1000));
+        await adbCmd(['start-server'], 15);
+        const r = await adbCmd(['connect', `127.0.0.1:${p}`], 20);
+        await new Promise(r => setTimeout(r, 1000));
+        if (adbConnected()) { saveAdbTarget(`127.0.0.1:${p}`); return true; }
+      }
+    } catch (_) {}
+  }
+  // Fallback to saved target
   if (!adbTarget) return false;
   adbCmd(['kill-server'], 8).catch(() => {});
   await new Promise(r => setTimeout(r, 1500));

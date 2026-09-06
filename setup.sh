@@ -119,7 +119,7 @@ echo -e "${YELLOW}[6/6] Creating config...${NC}"
 if [ ! -s "$API_DIR/config.json" ]; then
   cat > "$API_DIR/config.json" << 'ENDJSON'
 {
-  "adbTarget": "",
+  "shizukuPort": 9090,
   "sshPassword": "",
   "streamBitrate": 4000000,
   "streamResolution": "720x1280",
