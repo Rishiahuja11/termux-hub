@@ -73,9 +73,29 @@ if [ "$HUB_DIR" != "$API_DIR" ]; then
   cp -f "$HUB_DIR/start.sh" "$API_DIR/" 2>/dev/null || true
   cp -f "$HUB_DIR/restart.sh" "$API_DIR/" 2>/dev/null || true
   cp -rf "$HUB_DIR/public/"* "$API_DIR/public/" 2>/dev/null || true
+  cp -rf "$HUB_DIR/rish/"* "$API_DIR/rish/" 2>/dev/null || true
 fi
 
 echo -e "  ${GREEN}✓${NC} Directory: $API_DIR"
+
+# ---- Step 3b: Install rish (Shizuku shell) ----
+echo -e "${YELLOW}[3b/6] Installing rish (Shizuku)...${NC}"
+
+RISH_DIR="$API_DIR/rish"
+RISH_BIN="$PREFIX/bin/rish"
+RISH_DEX="$PREFIX/bin/rish_shizuku.dex"
+
+if [ -f "$RISH_DIR/rish" ] && [ -f "$RISH_DIR/rish_shizuku.dex" ]; then
+  # Fix the PKG placeholder and install to Termux bin
+  sed 's/PKG/com.termux/' "$RISH_DIR/rish" > "$RISH_BIN"
+  chmod 700 "$RISH_BIN"
+  cp "$RISH_DIR/rish_shizuku.dex" "$RISH_DEX"
+  chmod 400 "$RISH_DEX"
+  echo -e "  ${GREEN}✓${NC} rish installed to $RISH_BIN"
+  echo -e "  ${YELLOW}⚠ Make sure Shizuku app is installed and running${NC}"
+else
+  echo -e "  ${YELLOW}⚠ rish files not found in repo, skipping (install manually from Shizuku app)${NC}"
+fi
 
 # ---- Step 4: Generate TLS certificate ----
 echo -e "${YELLOW}[4/6] Generating TLS certificate...${NC}"
@@ -119,7 +139,6 @@ echo -e "${YELLOW}[6/6] Creating config...${NC}"
 if [ ! -s "$API_DIR/config.json" ]; then
   cat > "$API_DIR/config.json" << 'ENDJSON'
 {
-  "shizukuPort": 9090,
   "sshPassword": "",
   "streamBitrate": 4000000,
   "streamResolution": "720x1280",
