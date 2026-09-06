@@ -1078,8 +1078,12 @@ async function route(req, res) {
       cleanupStream();
       if (rishConnected()) {
         // Spawn rish directly with persistent stdin, send screenrecord command
-        const cmd = `rm -f "${STREAM_FILE}"\nscreenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &\ntail -f /dev/null`;
-        rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `echo ${JSON.stringify(cmd)} | "${RISH_BIN}"`], { env: process.env, stdio: ['ignore', 'ignore', 'ignore'], detached: true });
+        const cmdFile = '/sdcard/.stream_cmd.sh';
+        const rmLine = `rm -f "${STREAM_FILE}"`;
+        const srLine = `screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &`;
+        const tailLine = `tail -f /dev/null`;
+        fs.writeFileSync(cmdFile, `#!/system/bin/sh\n${rmLine}\n${srLine}\n${tailLine}\n`, { mode: 0o755 });
+        rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `"${RISH_BIN}" < "${cmdFile}"`], { env: process.env, stdio: ['ignore', 'ignore', 'ignore'], detached: true });
         rishProc.unref();
 
         let waitCount = 0;
