@@ -1036,7 +1036,6 @@ async function route(req, res) {
 
   // MJPEG live stream: screenrecord H264 -> ffmpeg MJPEG pipeline
   if (pathname === '/api/android/stream' && method === 'GET') {
-    if (!rishConnected() && !adbConnected()) return sendJson(res, 503, { ok: false, error: 'No shell access (rish or ADB)' });
     const cfg = loadConfig();
     const boundary = 'frame';
     const fps = cfg.streamFps || 30;
