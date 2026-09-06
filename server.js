@@ -1070,19 +1070,17 @@ async function route(req, res) {
     let rishProc;
 
     const cleanupStream = () => {
-      try { if (rishProc) { rishProc.stdin.end(); rishProc.kill('SIGTERM'); } } catch (_) {}
-      try { execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `pkill -f "screenrecord.*${STREAM_FILE}" 2>/dev/null; rm -f "${STREAM_FILE}"`], { timeout: 3000, env: process.env }); } catch (_) {}
+      try { if (rishProc) rishProc.kill('SIGTERM'); } catch (_) {}
+      try { execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `pkill -f "screenrecord.*${STREAM_FILE}" 2>/dev/null; pkill -f "tail -f /dev/null" 2>/dev/null; rm -f "${STREAM_FILE}"`], { timeout: 3000, env: process.env }); } catch (_) {}
     };
 
     const startPipeline = () => {
       cleanupStream();
       if (rishConnected()) {
         // Spawn rish directly with persistent stdin, send screenrecord command
-        rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `"${RISH_BIN}"`], { env: process.env, stdio: ['pipe', 'ignore', 'ignore'] });
-        rishProc.stdin.write(`rm -f "${STREAM_FILE}"\nscreenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &\ntail -f /dev/null\n`);
-        rishProc.stdin.end();
-        rishProc.on('error', () => {});
-        rishProc.on('close', () => {});
+        const cmd = `rm -f "${STREAM_FILE}"\nscreenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &\ntail -f /dev/null`;
+        rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `echo ${JSON.stringify(cmd)} | "${RISH_BIN}"`], { env: process.env, stdio: ['ignore', 'ignore', 'ignore'], detached: true });
+        rishProc.unref();
 
         let waitCount = 0;
         const waitForFile = () => {
