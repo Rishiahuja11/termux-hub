@@ -1060,17 +1060,113 @@ async function route(req, res) {
     let frameCount = 0;
 
     const FFMPEG = '/data/data/com.termux/files/usr/bin/ffmpeg';
-    const STREAM_FILE = '/sdcard/Android/data/com.termux/files/.stream.h264';
+    const STREAM_FILE = '/sdcard/.stream.h264';
     const recordTimeout = cfg.screenRecordTimeout || 180;
 
-    let pipelineCmd;
-    if (rishConnected()) {
-      // rish can't pipe binary stdout (app_process strips it), so write to file
-      // and have ffmpeg read from it on the same device
-      pipelineCmd = `rm -f "${STREAM_FILE}"; echo 'screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} ${STREAM_FILE}' | "${RISH_BIN}" 2>/dev/null & sleep 1; while [ ! -s "${STREAM_FILE}" ]; do sleep 0.2; done; "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i "${STREAM_FILE}" -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1; rm -f "${STREAM_FILE}"`;
-    } else {
-      pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
-    }
+    const SOI = Buffer.from([0xFF, 0xD8]);
+    const EOI = Buffer.from([0xFF, 0xD9]);
+
+    let pipeline;
+    let rishProc;
+
+    const cleanupStream = () => {
+      try { if (rishProc) { rishProc.stdin.end(); rishProc.kill('SIGTERM'); } } catch (_) {}
+      try { execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `pkill -f "screenrecord.*${STREAM_FILE}" 2>/dev/null; rm -f "${STREAM_FILE}"`], { timeout: 3000, env: process.env }); } catch (_) {}
+    };
+
+    const startPipeline = () => {
+      cleanupStream();
+      if (rishConnected()) {
+        // Spawn rish directly with persistent stdin, send screenrecord command
+        rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `"${RISH_BIN}"`], { env: process.env, stdio: ['pipe', 'ignore', 'ignore'] });
+        rishProc.stdin.write(`rm -f "${STREAM_FILE}"\n`);
+        rishProc.stdin.write(`screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}"\n`);
+        rishProc.on('error', () => {});
+        rishProc.on('close', () => {});
+
+        let waitCount = 0;
+        const waitForFile = () => {
+          if (!alive || !res.writable) { cleanupStream(); return; }
+          if (fs.existsSync(STREAM_FILE) && fs.statSync(STREAM_FILE).size > 1000) {
+            startFfmpeg();
+          } else if (waitCount++ < 40) {
+            setTimeout(waitForFile, 250);
+          } else {
+            log('android-stream timeout waiting for screenrecord');
+            alive = false;
+          }
+        };
+        waitForFile();
+      } else {
+        // ADB path (direct pipe)
+        const cmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+        const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', cmd], { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+        let localBuf = Buffer.alloc(0);
+        p.stdout.on('data', (chunk) => {
+          if (!alive || !res.writable) return;
+          localBuf = Buffer.concat([localBuf, chunk]);
+          while (localBuf.length > 2) {
+            const soi = localBuf.indexOf(SOI);
+            if (soi === -1) { localBuf = Buffer.alloc(0); break; }
+            if (soi > 0) localBuf = localBuf.slice(soi);
+            const eoi = localBuf.indexOf(EOI, 2);
+            if (eoi === -1) break;
+            const frameLen = eoi + 2;
+            const frame = localBuf.slice(0, frameLen);
+            localBuf = localBuf.slice(frameLen);
+            if (frame.length > 100 && alive && res.writable) {
+              frameCount++;
+              try {
+                res.write('--' + boundary + '\r\nContent-Type: image/jpeg\r\nContent-Length: ' + frame.length + '\r\n\r\n');
+                res.write(frame);
+                res.write('\r\n');
+              } catch (_) { alive = false; }
+            }
+          }
+        });
+        p.on('close', () => { if (alive && res.writable) { log(`android-stream adb-restart frames=${frameCount} ip=${ip}`); startPipeline(); } });
+        p.on('error', () => { alive = false; });
+        pipeline = p;
+      }
+    };
+
+    const startFfmpeg = () => {
+      if (!alive || !res.writable) { cleanupStream(); return; }
+      const ffmpegCmd = `"${FFMPEG}" -hide_banner -loglevel quiet -f h264 -re -i "${STREAM_FILE}" -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+      const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', ffmpegCmd], { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+      let localBuf = Buffer.alloc(0);
+      p.stdout.on('data', (chunk) => {
+        if (!alive || !res.writable) return;
+        localBuf = Buffer.concat([localBuf, chunk]);
+        while (localBuf.length > 2) {
+          const soi = localBuf.indexOf(SOI);
+          if (soi === -1) { localBuf = Buffer.alloc(0); break; }
+          if (soi > 0) localBuf = localBuf.slice(soi);
+          const eoi = localBuf.indexOf(EOI, 2);
+          if (eoi === -1) break;
+          const frameLen = eoi + 2;
+          const frame = localBuf.slice(0, frameLen);
+          localBuf = localBuf.slice(frameLen);
+          if (frame.length > 100 && alive && res.writable) {
+            frameCount++;
+            try {
+              res.write('--' + boundary + '\r\nContent-Type: image/jpeg\r\nContent-Length: ' + frame.length + '\r\n\r\n');
+              res.write(frame);
+              res.write('\r\n');
+            } catch (_) { alive = false; }
+          }
+        }
+      });
+      p.on('close', () => {
+        cleanupStream();
+        if (alive && res.writable) {
+          log(`android-stream file-restart frames=${frameCount} ip=${ip}`);
+          startPipeline();
+        }
+      });
+      p.on('error', () => { cleanupStream(); alive = false; });
+      pipeline = p;
+    };
 
     const SOI = Buffer.from([0xFF, 0xD8]);
     const EOI = Buffer.from([0xFF, 0xD9]);
