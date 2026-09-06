@@ -1061,11 +1061,14 @@ async function route(req, res) {
     let frameCount = 0;
 
     const FFMPEG = '/data/data/com.termux/files/usr/bin/ffmpeg';
+    const STREAM_FILE = '/sdcard/Android/data/com.termux/files/.stream.h264';
     const recordTimeout = cfg.screenRecordTimeout || 180;
 
     let pipelineCmd;
     if (rishConnected()) {
-      pipelineCmd = `echo 'screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null' | "${RISH_BIN}" 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+      // rish can't pipe binary stdout (app_process strips it), so write to file
+      // and have ffmpeg read from it on the same device
+      pipelineCmd = `rm -f "${STREAM_FILE}"; echo 'screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} ${STREAM_FILE}' | "${RISH_BIN}" 2>/dev/null & sleep 1; while [ ! -s "${STREAM_FILE}" ]; do sleep 0.2; done; "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i "${STREAM_FILE}" -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1; rm -f "${STREAM_FILE}"`;
     } else {
       pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
     }
