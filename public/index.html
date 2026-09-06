@@ -6,60 +6,92 @@
 <meta name="theme-color" content="#0f0f1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TermuX Hub — Device Manager</title>
+<title>TermuX Hub</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect rx='22' width='100' height='100' fill='url(%23g)'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>T</text></svg>">
-<link rel="stylesheet" href="https://opensource.josebamirena.com/fx/2.0.0/dist/css/fx-mini.min.css" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<div id="app">
-  <!-- Auth Gate -->
-  <div id="gate" class="gate">
-    <div class="gate-bg"></div>
-    <div class="gate-card" data-reveal="zoom">
-      <div class="gate-logo"><div class="gate-logo-icon">T</div></div>
-      <h1>TermuX Hub</h1>
-      <p class="gate-sub" id="gate-subtitle">Sign in to your device</p>
-      <form id="gate-form" autocomplete="off">
-        <div id="gate-user-row" class="gate-row" style="display:none">
-          <label>Username</label>
-          <input id="gate-username" type="text" placeholder="username" autocomplete="username">
-        </div>
-        <div class="gate-row">
-          <label id="gate-pw-label">Password</label>
-          <input id="gate-password" type="password" placeholder="password" autocomplete="current-password">
-        </div>
-        <div id="gate-err" class="err"></div>
-        <button type="submit" class="btn primary full" id="gate-btn">Sign In</button>
-        <p class="gate-toggle" id="gate-toggle"></p>
-      </form>
-    </div>
-  </div>
 
-  <!-- Dashboard -->
-  <div id="dash" class="dash hidden">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-logo">T</div><span>TermuX Hub</span></div>
-      <nav id="nav"></nav>
-      <div class="sidebar-foot">
-        <div class="con"><span class="dot"></span><span id="con-txt">Connected</span></div>
-        <button id="logout" class="btn ghost sm full">Sign Out</button>
-      </div>
-    </aside>
-    <main class="main">
-      <header class="topbar">
-        <button class="hamburger" id="hamburger">&#9776;</button>
-        <h2 id="view-title">Dashboard</h2>
-        <div class="topbar-right">
-          <span id="user-badge" class="user-badge"></span>
-          <button id="refresh" class="btn ghost sm">&#8635;</button>
-        </div>
-      </header>
-      <div id="views"></div>
-    </main>
+<!-- Auth Gate -->
+<div id="gate" class="gate">
+  <div class="gate-bg">
+    <div class="gate-orb gate-orb-1"></div>
+    <div class="gate-orb gate-orb-2"></div>
+    <div class="gate-orb gate-orb-3"></div>
   </div>
-  <div id="toast" class="toast hidden"></div>
+  <div class="gate-card">
+    <div class="gate-logo">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
+        <rect width="48" height="48" rx="14" fill="url(#lg)"/>
+        <path d="M14 32V16h3.5l5.5 10 5.5-10H32v16h-3V22l-5 9h-2l-5-9v10z" fill="white"/>
+      </svg>
+    </div>
+    <h1>TermuX Hub</h1>
+    <p class="gate-sub" id="gate-subtitle">Sign in to your device</p>
+    <form id="gate-form" autocomplete="off">
+      <div id="gate-user-row" class="gate-field" style="display:none">
+        <input id="gate-username" type="text" placeholder="Username" autocomplete="username">
+      </div>
+      <div class="gate-field">
+        <input id="gate-password" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
+      <div id="gate-err" class="err"></div>
+      <button type="submit" class="btn-primary" id="gate-btn">Sign In</button>
+      <p class="gate-toggle" id="gate-toggle"></p>
+    </form>
+  </div>
 </div>
+
+<!-- Dashboard -->
+<div id="dash" class="dash hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+        <defs><linearGradient id="lg2" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
+        <rect width="48" height="48" rx="14" fill="url(#lg2)"/>
+        <path d="M14 32V16h3.5l5.5 10 5.5-10H32v16h-3V22l-5 9h-2l-5-9v10z" fill="white"/>
+      </svg>
+      <span>TermuX Hub</span>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sidebar-footer">
+      <div class="conn-status" id="conn-status">
+        <span class="conn-dot"></span>
+        <span class="conn-label">Connected</span>
+      </div>
+      <button class="btn-logout" id="logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h2 id="view-title">Dashboard</h2>
+      <div class="topbar-right">
+        <span id="user-badge" class="user-badge"></span>
+        <button id="refresh" class="btn-icon" title="Refresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+    </header>
+    <div id="views"></div>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
 <script src="/assets/app.js"></script>
 </body>
 </html>
