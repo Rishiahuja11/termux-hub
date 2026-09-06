@@ -1071,7 +1071,7 @@ async function route(req, res) {
 
     const cleanupStream = () => {
       try { if (rishProc) rishProc.kill('SIGTERM'); } catch (_) {}
-      try { execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `pkill -f "screenrecord.*${STREAM_FILE}" 2>/dev/null; pkill -f "tail -f /dev/null" 2>/dev/null; rm -f "${STREAM_FILE}"`], { timeout: 3000, env: process.env }); } catch (_) {}
+      try { execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `pkill -f "screenrecord.*${STREAM_FILE}" 2>/dev/null; rm -f "${STREAM_FILE}" "/sdcard/.stream_cmd.sh"`], { timeout: 3000, env: process.env }); } catch (_) {}
     };
 
     const startPipeline = () => {
