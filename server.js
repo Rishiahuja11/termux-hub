@@ -1169,47 +1169,8 @@ async function route(req, res) {
       pipeline = p;
     };
 
-    const SOI = Buffer.from([0xFF, 0xD8]);
-    const EOI = Buffer.from([0xFF, 0xD9]);
-
-    let pipeline;
-    const startPipeline = () => {
-      const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', pipelineCmd], { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
-      let localBuf = Buffer.alloc(0);
-      p.stdout.on('data', (chunk) => {
-        if (!alive || !res.writable) return;
-        localBuf = Buffer.concat([localBuf, chunk]);
-        while (localBuf.length > 2) {
-          const soi = localBuf.indexOf(SOI);
-          if (soi === -1) { localBuf = Buffer.alloc(0); break; }
-          if (soi > 0) localBuf = localBuf.slice(soi);
-          const eoi = localBuf.indexOf(EOI, 2);
-          if (eoi === -1) break;
-          const frameLen = eoi + 2;
-          const frame = localBuf.slice(0, frameLen);
-          localBuf = localBuf.slice(frameLen);
-          if (frame.length > 100 && alive && res.writable) {
-            frameCount++;
-            try {
-              res.write('--' + boundary + '\r\nContent-Type: image/jpeg\r\nContent-Length: ' + frame.length + '\r\n\r\n');
-              res.write(frame);
-              res.write('\r\n');
-            } catch (_) { alive = false; }
-          }
-        }
-      });
-      p.on('close', () => {
-        if (alive && res.writable) {
-          log(`android-stream auto-restart frames=${frameCount} ip=${ip}`);
-          startPipeline();
-        }
-      });
-      p.on('error', () => { alive = false; });
-      return p;
-    };
-
     pipeline = startPipeline();
-    req.on('close', () => { alive = false; try { pipeline.kill(); } catch (_) {} });
+    req.on('close', () => { alive = false; cleanupStream(); });
 
     log(`android-stream start method=screenrecord-ffmpeg fps=${fps} bitrate=${bitrate} resolution=${sw}x${sh} ip=${ip}`);
     return;
