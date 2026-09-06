@@ -1586,12 +1586,16 @@ function adbCmd(args, timeoutSec) {
 function rishAvailable() {
   try { return fs.existsSync(RISH_BIN) && fs.statSync(RISH_BIN).size > 50; } catch (_) { return false; }
 }
+let _rishCache = { result: false, lastCheck: 0 };
 function rishConnected() {
   if (!rishAvailable()) return false;
+  const now = Date.now();
+  if (now - _rishCache.lastCheck < 5000) return _rishCache.result;
   try {
     const s = require('child_process').execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `echo id | "${RISH_BIN}"`], { encoding: 'utf8', timeout: 10000, env: process.env });
-    return s.includes('uid=');
-  } catch (_) { return false; }
+    _rishCache = { result: s.includes('uid='), lastCheck: now };
+    return _rishCache.result;
+  } catch (_) { _rishCache = { result: false, lastCheck: now }; return false; }
 }
 function rishCmd(cmd, timeoutSec) {
   const safe = cmd.replace(/'/g, "'\\''");
