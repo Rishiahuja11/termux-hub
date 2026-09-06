@@ -1009,7 +1009,7 @@ async function route(req, res) {
     try {
       if (rishConnected()) {
         buf = await new Promise((resolve, reject) => {
-          const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-c', `echo 'screencap -p' | "${RISH_BIN}" 2>/dev/null`], { encoding: 'buffer', timeout: 20000, maxBuffer: 32 * 1024 * 1024, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+          const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `echo 'screencap -p' | "${RISH_BIN}" 2>/dev/null`], { encoding: 'buffer', timeout: 20000, maxBuffer: 32 * 1024 * 1024, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
           const chunks = [];
           p.stdout.on('data', c => chunks.push(c));
           p.on('close', () => resolve(Buffer.concat(chunks)));
@@ -1068,7 +1068,7 @@ async function route(req, res) {
 
     let pipeline;
     const startPipeline = () => {
-      const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-c', pipelineCmd], { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+      const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', pipelineCmd], { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
       let localBuf = Buffer.alloc(0);
       p.stdout.on('data', (chunk) => {
         if (!alive || !res.writable) return;
@@ -1589,7 +1589,7 @@ function rishAvailable() {
 function rishConnected() {
   if (!rishAvailable()) return false;
   try {
-    const s = require('child_process').execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-c', `echo id | "${RISH_BIN}"`], { encoding: 'utf8', timeout: 10000, env: process.env });
+    const s = require('child_process').execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `echo id | "${RISH_BIN}"`], { encoding: 'utf8', timeout: 10000, env: process.env });
     return s.includes('uid=');
   } catch (_) { return false; }
 }
