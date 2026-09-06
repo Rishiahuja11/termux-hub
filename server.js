@@ -1079,9 +1079,8 @@ async function route(req, res) {
       if (rishConnected()) {
         // Spawn rish directly with persistent stdin, send screenrecord command
         rishProc = spawn('/data/data/com.termux/files/usr/bin/bash', ['-l', '-c', `"${RISH_BIN}"`], { env: process.env, stdio: ['pipe', 'ignore', 'ignore'] });
-        rishProc.stdin.write(`rm -f "${STREAM_FILE}"\n`);
-        rishProc.stdin.write(`screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &\n`);
-        rishProc.stdin.write(`tail -f /dev/null\n`);
+        rishProc.stdin.write(`rm -f "${STREAM_FILE}"\nscreenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} "${STREAM_FILE}" &\ntail -f /dev/null\n`);
+        rishProc.stdin.end();
         rishProc.on('error', () => {});
         rishProc.on('close', () => {});
 
