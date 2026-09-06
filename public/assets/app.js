@@ -556,49 +556,46 @@ async function renderAndroid(el) {
   if (androidStreamImg) { androidStreamImg.src = ''; androidStreamImg = null; }
   el.innerHTML = `<div class="android-layout" id="android-layout">
     <div class="screen-container" id="screen-box">
-      <div class="empty">Detecting ADB connection...</div>
+      <div class="empty">Detecting connection...</div>
     </div>
     <div class="android-ctrl" id="android-ctrl"></div>
   </div>`;
-  let st = { adb: false };
+  let st = { adb: false, method: 'none' };
   try { st = await api('/api/android/status'); } catch (_) {}
-  let shizuku = { running: false, port: 0, connected: false };
+  let shizuku = { running: false, connected: false };
   try { shizuku = await api('/api/android/shizuku/status'); } catch (_) {}
   const ctrl = $('#android-ctrl');
   if (!st.adb) {
-    const shizukuStatus = shizuku.running
-      ? `<span style="color:var(--success)">&#9679; Shizuku running on port ${shizuku.port}</span>`
+    const rishStatus = shizuku.running
+      ? `<span style="color:var(--success)">&#9679; rish installed (Shizuku running)</span>`
       : `<span style="color:var(--warn)">&#9679; Shizuku not detected</span>`;
     ctrl.innerHTML = `
       <div class="ctrl-section" style="border-color:var(--warn)">
-        <h3 style="color:var(--warn)">ADB not connected</h3>
-        <p style="font-size:13px;color:var(--fg2);margin-bottom:12px">Live screen and remote input need ADB access via Shizuku.</p>
+        <h3 style="color:var(--warn)">No Shell Access</h3>
+        <p style="font-size:13px;color:var(--fg2);margin-bottom:12px">Live screen and remote input need Shizuku (rish) or ADB.</p>
         <div style="margin-bottom:12px;padding:10px;background:var(--bg2);border-radius:8px">
-          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Shizuku Status: ${shizukuStatus}</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Status: ${rishStatus}</div>
           <ol style="font-size:11px;color:var(--fg2);margin:0;padding-left:16px;line-height:1.8">
             <li>Install <a href="https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api" target="_blank" style="color:var(--accent)">Shizuku</a> from Play Store</li>
-            <li>Open Shizuku → tap <b>Start</b> (via Wireless Debugging)</li>
-            <li>Once started, click <b>Connect</b> below</li>
+            <li>Open Shizuku → tap <b>Start</b></li>
+            <li>In Shizuku → Settings → <b>rish</b> → Write files to Termux</li>
+            <li>Allow battery optimization: Settings → Apps → Termux → Battery → Unrestricted</li>
+            <li>Allow battery optimization: Settings → Apps → Shizuku → Battery → Unrestricted</li>
+            <li>Click <b>Connect</b> below</li>
           </ol>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <button class="btn primary sm" onclick="shizukuConnect()">Connect via Shizuku</button>
           <button class="btn ghost sm" onclick="renderAndroid($('#views'))">Refresh</button>
         </div>
-        <details style="margin-bottom:12px">
-          <summary style="font-size:12px;color:var(--fg2);cursor:pointer">Manual ADB connect (advanced)</summary>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input class="inp" id="adb-target" placeholder="Host:Port (e.g. 192.168.1.100:5555)">
-            <button class="btn primary sm" onclick="adbConnect()">Connect</button>
-          </div>
-        </details>
       </div>
       <div class="ctrl-section"><h3>Installed Apps</h3><div class="app-list" id="android-apps"><div class="empty">Loading...</div></div></div>`;
     loadAndroidApps();
     return;
   }
+  const methodLabel = st.method === 'rish' ? 'rish (Shizuku)' : 'ADB';
   ctrl.innerHTML = `
-    <div class="ctrl-section"><h3>Controls <span style="color:var(--success);font-size:11px">&#9679; ADB on</span></h3>
+    <div class="ctrl-section"><h3>Controls <span style="color:var(--success);font-size:11px">&#9679; ${methodLabel}</span></h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn sm ghost" onclick="androidKey('home')" title="Home">&#127968;</button>
         <button class="btn sm ghost" onclick="androidKey('back')" title="Back">&larr;</button>
@@ -815,12 +812,8 @@ async function renderSettings(el) {
       </div>
     </div>
     <div class="ctrl-section" style="margin-bottom:16px">
-      <h3>Shizuku / ADB</h3>
+      <h3>Shizuku / Shell Access</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div>
-          <label style="font-size:12px;color:var(--fg2)">Shizuku Port</label>
-          <input class="inp" id="cfg-shizuku-port" type="number" value="${cfg.shizukuPort || 9090}" style="width:100%;margin-top:4px">
-        </div>
         <div>
           <label style="font-size:12px;color:var(--fg2)">SSH Password (for remote setup)</label>
           <input class="inp" id="cfg-ssh-pw" type="password" value="${escH(cfg.sshPassword || '')}" placeholder="Optional SSH password" style="width:100%;margin-top:4px">
@@ -905,7 +898,6 @@ async function renderSettings(el) {
 
 async function saveConfig() {
   const cfg = {
-    shizukuPort: parseInt($('#cfg-shizuku-port')?.value || '9090'),
     sshPassword: $('#cfg-ssh-pw')?.value || '',
     streamResolution: $('#cfg-resolution')?.value || '720x1280',
     streamFps: parseInt($('#cfg-fps')?.value || '15'),

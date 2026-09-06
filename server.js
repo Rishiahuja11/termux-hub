@@ -110,7 +110,6 @@ function getBuildLog(id) { const f = path.join(CONFIG.STORE_DIR, id, 'build.log'
 
 // ---- Device config (web-editable) ----
 const DEFAULT_CONFIG = {
-  shizukuPort: 9090,
   sshPassword: '',
   streamBitrate: 4000000,
   streamResolution: '720x1280',
@@ -136,13 +135,7 @@ const ADB_TARGET_FILE = path.join(CONFIG.CERT_DIR, 'adb-target');
 let adbTarget = '';
 try { adbTarget = fs.readFileSync(ADB_TARGET_FILE, 'utf8').trim(); } catch (_) {}
 function saveAdbTarget(t) { adbTarget = t; try { fs.writeFileSync(ADB_TARGET_FILE, t, 'utf8'); } catch (_) {} }
-// Apply saved config on startup
 const startupConfig = loadConfig();
-// Legacy: migrate adbTarget to shizukuPort if present
-if (startupConfig.adbTarget && !startupConfig.shizukuPort) {
-  delete startupConfig.adbTarget;
-  saveConfig(startupConfig);
-}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -974,35 +967,18 @@ async function route(req, res) {
 
   // Shizuku status endpoint
   if (pathname === '/api/android/shizuku/status' && method === 'GET') {
-    let running = false;
-    let port = 0;
-    // Check common Shizuku ports (9090 is default)
-    for (const p of [9090, 9091, 9092]) {
-      try {
-        const s = require('child_process').execSync(`timeout 1 bash -c 'echo >/dev/tcp/127.0.0.1/${p}' 2>/dev/null && echo open`, { encoding: 'utf8', timeout: 3000 });
-        if (s.includes('open')) { running = true; port = p; break; }
-      } catch (_) {}
-    }
-    const shizukuConnected = running && adbConnected();
-    return sendJson(res, 200, { ok: true, running, port, connected: shizukuConnected, adb: adbConnected() });
+    const running = rishAvailable();
+    const connected = rishConnected();
+    const adb = adbConnected();
+    return sendJson(res, 200, { ok: true, running, connected, adb });
   }
 
   // Shizuku connect endpoint
   if (pathname === '/api/android/shizuku/connect' && method === 'POST') {
-    let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { body = {}; }
-    const port = body.port || 9090;
-    log(`shizuku-connect port=${port} ip=${ip}`);
-    // Kill existing adb server first
-    adbCmd(['kill-server'], 8).catch(() => {});
-    await new Promise(r => setTimeout(r, 1000));
-    await adbCmd(['start-server'], 15);
-    const target = `127.0.0.1:${port}`;
-    const r = await adbCmd(['connect', target], 20);
-    await new Promise(r => setTimeout(r, 1000));
-    const ok = adbConnected();
-    if (ok) saveAdbTarget(target);
-    log(`shizuku-connect result=${ok} target=${target}`);
-    return sendJson(res, ok ? 200 : 500, { ok, target, error: ok ? null : (r.stderr || 'connect failed') });
+    log(`shizuku-connect ip=${ip}`);
+    const ok = rishConnected();
+    log(`shizuku-connect rish=${ok}`);
+    return sendJson(res, ok ? 200 : 500, { ok, error: ok ? null : 'rish not available or Shizuku not running. Open Shizuku app and ensure it says "Shizuku is running".' });
   }
 
   // Shizuku disconnect endpoint
@@ -1015,26 +991,36 @@ async function route(req, res) {
   }
 
   if (pathname === '/api/android/status' && method === 'GET') {
-    const adb = await runCmd('command -v adb && adb get-state 2>&1 || echo no-adb', 5);
-    const hasAdb = adb.stdout.includes('device') && !adb.stdout.includes('no-adb');
-    const screencap = hasAdb ? await runCmd('adb exec-out screencap -p | wc -c', 10) : null;
-    const canScreencap = screencap && parseInt(screencap.stdout.trim()) > 1000;
-    const inputTest = hasAdb ? await runCmd('adb shell cmd statusbar expand-notifications 2>&1 || echo no-input', 5) : null;
-    const canInput = hasAdb && inputTest && !inputTest.stdout.includes('SecurityException');
-    const brightness = hasAdb ? await runCmd('adb shell settings get system screen_brightness 2>&1', 5) : null;
+    const hasShell = rishConnected() || adbConnected();
+    const method = rishConnected() ? 'rish' : adbConnected() ? 'adb' : 'none';
+    const screencap = hasShell ? await shellCmd('screencap -p | wc -c', 10) : null;
+    const canScreencap = screencap && parseInt((screencap.stdout || '').trim()) > 1000;
+    const inputTest = hasShell ? await shellCmd('cmd statusbar expand-notifications 2>&1 || echo no-input', 5) : null;
+    const canInput = hasShell && inputTest && !inputTest.stdout.includes('SecurityException');
+    const brightness = hasShell ? await shellCmd('settings get system screen_brightness 2>&1', 5) : null;
     const canDisplay = brightness && !brightness.stdout.includes('Exception');
-    const pkgCount = hasAdb ? await runCmd('adb shell pm list packages -3 2>/dev/null | wc -l', 10) : null;
-    return sendJson(res, 200, { ok: true, adb: hasAdb, canScreencap, canInput, canDisplay, brightness: canDisplay ? brightness.stdout.trim() : null, thirdPartyApps: pkgCount ? parseInt(pkgCount.stdout.trim()) : 0 });
+    const pkgCount = hasShell ? await shellCmd('pm list packages -3 2>/dev/null | wc -l', 10) : null;
+    return sendJson(res, 200, { ok: true, method, adb: hasShell, canScreencap, canInput, canDisplay, brightness: canDisplay ? brightness.stdout.trim() : null, thirdPartyApps: pkgCount ? parseInt(pkgCount.stdout.trim()) : 0 });
   }
 
   if (pathname === '/api/android/screenshot' && method === 'GET') {
-    if (!adbConnected()) return sendJson(res, 503, { ok: false, error: 'ADB not connected' });
+    if (!rishConnected() && !adbConnected()) return sendJson(res, 503, { ok: false, error: 'No shell access (rish or ADB)' });
     let buf;
     try {
-      buf = await new Promise((resolve, reject) => {
-        execFile(ADB_BIN, ['exec-out', 'screencap', '-p'], { encoding: 'buffer', timeout: 20000, maxBuffer: 32 * 1024 * 1024, env: process.env },
-          (err, stdout) => err ? reject(err) : resolve(stdout));
-      });
+      if (rishConnected()) {
+        buf = await new Promise((resolve, reject) => {
+          const p = spawn('/data/data/com.termux/files/usr/bin/bash', ['-c', `echo 'screencap -p' | "${RISH_BIN}" 2>/dev/null`], { encoding: 'buffer', timeout: 20000, maxBuffer: 32 * 1024 * 1024, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
+          const chunks = [];
+          p.stdout.on('data', c => chunks.push(c));
+          p.on('close', () => resolve(Buffer.concat(chunks)));
+          p.on('error', reject);
+        });
+      } else {
+        buf = await new Promise((resolve, reject) => {
+          execFile(ADB_BIN, ['exec-out', 'screencap', '-p'], { encoding: 'buffer', timeout: 20000, maxBuffer: 32 * 1024 * 1024, env: process.env },
+            (err, stdout) => err ? reject(err) : resolve(stdout));
+        });
+      }
     } catch (e) { return sendJson(res, 500, { ok: false, error: 'screencap failed: ' + e.message }); }
     if (!buf || buf.length < 100) return sendJson(res, 500, { ok: false, error: 'screencap empty' });
     res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store', 'Content-Length': buf.length });
@@ -1043,7 +1029,7 @@ async function route(req, res) {
 
   // MJPEG live stream: screenrecord H264 -> ffmpeg MJPEG pipeline
   if (pathname === '/api/android/stream' && method === 'GET') {
-    if (!adbConnected()) return sendJson(res, 503, { ok: false, error: 'ADB not connected' });
+    if (!rishConnected() && !adbConnected()) return sendJson(res, 503, { ok: false, error: 'No shell access (rish or ADB)' });
     const cfg = loadConfig();
     const boundary = 'frame';
     const fps = cfg.streamFps || 30;
@@ -1054,7 +1040,7 @@ async function route(req, res) {
 
     // Wake screen
     if (cfg.wakeScreenOnStream !== false) {
-      try { await runCmd(`"${ADB_BIN}" shell input keyevent KEYCODE_WAKEUP`, 3); } catch (_) {}
+      try { await shellCmd('input keyevent KEYCODE_WAKEUP', 3); } catch (_) {}
     }
 
     res.writeHead(200, {
@@ -1067,10 +1053,15 @@ async function route(req, res) {
     let alive = true;
     let frameCount = 0;
 
-    // Single shell command: adb screenrecord | ffmpeg -> MJPEG on pipe:1
     const FFMPEG = '/data/data/com.termux/files/usr/bin/ffmpeg';
     const recordTimeout = cfg.screenRecordTimeout || 180;
-    const pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+
+    let pipelineCmd;
+    if (rishConnected()) {
+      pipelineCmd = `echo 'screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null' | "${RISH_BIN}" 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+    } else {
+      pipelineCmd = `"${ADB_BIN}" exec-out screenrecord --output-format=h264 --bit-rate=${bitrate} --size=${sw}x${sh} --time-limit=${recordTimeout} - 2>/dev/null | "${FFMPEG}" -hide_banner -loglevel quiet -f h264 -i pipe:0 -f mjpeg -q:v ${cfg.streamQuality || 8} -r ${fps} -an pipe:1`;
+    }
 
     const SOI = Buffer.from([0xFF, 0xD8]);
     const EOI = Buffer.from([0xFF, 0xD9]);
@@ -1123,18 +1114,18 @@ async function route(req, res) {
     const type = body.type;
     if (!type) return sendJson(res, 400, { ok: false, error: 'type required' });
     let cmd;
-    if (type === 'tap') cmd = `adb shell input tap ${Math.round(body.x)} ${Math.round(body.y)}`;
-    else if (type === 'swipe') cmd = `adb shell input swipe ${Math.round(body.x1)} ${Math.round(body.y1)} ${Math.round(body.x2)} ${Math.round(body.y2)} ${body.duration || 300}`;
+    if (type === 'tap') cmd = `input tap ${Math.round(body.x)} ${Math.round(body.y)}`;
+    else if (type === 'swipe') cmd = `input swipe ${Math.round(body.x1)} ${Math.round(body.y1)} ${Math.round(body.x2)} ${Math.round(body.y2)} ${body.duration || 300}`;
     else if (type === 'key') {
       const k = String(body.keycode || body.key || '');
       if (!/^[a-zA-Z0-9_]+$/.test(k)) return sendJson(res, 400, { ok: false, error: 'invalid keycode' });
-      cmd = `adb shell input keyevent ${k}`;
+      cmd = `input keyevent ${k}`;
     }
-    else if (type === 'text') cmd = `adb shell input text ${shellQuote(String(body.text || ''))}`;
-    else if (type === 'longpress') cmd = `adb shell input swipe ${Math.round(body.x)} ${Math.round(body.y)} ${Math.round(body.x)} ${Math.round(body.y)} 1000`;
+    else if (type === 'text') cmd = `input text ${shellQuote(String(body.text || ''))}`;
+    else if (type === 'longpress') cmd = `input swipe ${Math.round(body.x)} ${Math.round(body.y)} ${Math.round(body.x)} ${Math.round(body.y)} 1000`;
     else return sendJson(res, 400, { ok: false, error: 'unknown type: ' + type });
     log(`android-input type=${type} ip=${ip}`);
-    const r = await runCmd(cmd, 10);
+    const r = await shellCmd(cmd, 10);
     return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, error: r.stderr || null });
   }
 
@@ -1142,48 +1133,40 @@ async function route(req, res) {
     let body; try { body = JSON.parse(await readBody(req, 1024)); } catch (e) { return sendJson(res, 400, { ok: false, error: 'invalid json' }); }
     const action = body.action;
     let cmd;
-    if (action === 'brightness') cmd = `adb shell settings put system screen_brightness ${Math.min(255, Math.max(0, Math.round(body.value)))}`;
-    else if (action === 'screen_off') cmd = 'adb shell input keyevent KEYCODE_SLEEP';
-    else if (action === 'screen_on') cmd = 'adb shell input keyevent KEYCODE_WAKEUP';
-    else if (action === 'power') cmd = 'adb shell input keyevent KEYCODE_POWER';
-    else if (action === 'volume_up') cmd = 'adb shell input keyevent KEYCODE_VOLUME_UP';
-    else if (action === 'volume_down') cmd = 'adb shell input keyevent KEYCODE_VOLUME_DOWN';
-    else if (action === 'volume_mute') cmd = 'adb shell input keyevent KEYCODE_VOLUME_MUTE';
-    else if (action === 'home') cmd = 'adb shell input keyevent KEYCODE_HOME';
-    else if (action === 'back') cmd = 'adb shell input keyevent KEYCODE_BACK';
-    else if (action === 'recent') cmd = 'adb shell input keyevent KEYCODE_APP_SWITCH';
-    else if (action === 'notifications') cmd = 'adb shell cmd statusbar expand-notifications';
-    else if (action === 'lock') cmd = 'adb shell input keyevent KEYCODE_POWER && sleep 1 && adb shell settings put system screen_off_timeout 10000';
-    else if (action === 'unlock') cmd = 'adb shell input keyevent KEYCODE_WAKEUP && sleep 0.5 && adb shell input swipe 540 2000 540 800 300';
+    if (action === 'brightness') cmd = `settings put system screen_brightness ${Math.min(255, Math.max(0, Math.round(body.value)))}`;
+    else if (action === 'screen_off') cmd = 'input keyevent KEYCODE_SLEEP';
+    else if (action === 'screen_on') cmd = 'input keyevent KEYCODE_WAKEUP';
+    else if (action === 'power') cmd = 'input keyevent KEYCODE_POWER';
+    else if (action === 'volume_up') cmd = 'input keyevent KEYCODE_VOLUME_UP';
+    else if (action === 'volume_down') cmd = 'input keyevent KEYCODE_VOLUME_DOWN';
+    else if (action === 'volume_mute') cmd = 'input keyevent KEYCODE_VOLUME_MUTE';
+    else if (action === 'home') cmd = 'input keyevent KEYCODE_HOME';
+    else if (action === 'back') cmd = 'input keyevent KEYCODE_BACK';
+    else if (action === 'recent') cmd = 'input keyevent KEYCODE_APP_SWITCH';
+    else if (action === 'notifications') cmd = 'cmd statusbar expand-notifications';
+    else if (action === 'lock') cmd = 'input keyevent KEYCODE_POWER';
+    else if (action === 'unlock') cmd = 'input keyevent KEYCODE_WAKEUP && sleep 0.5 && input swipe 540 2000 540 800 300';
     else return sendJson(res, 400, { ok: false, error: 'unknown action' });
     log(`android-display action=${action} ip=${ip}`);
-    const r = await runCmd(cmd, 10);
+    const r = await shellCmd(cmd, 10);
     return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, error: r.stderr || null });
   }
 
   if (pathname === '/api/android/apps' && method === 'GET') {
     const type = url.searchParams.get('type') || 'all';
     const max = Math.min(Math.max(parseInt(url.searchParams.get('max') || '250', 10) || 250, 10), 400);
-    // Prefer direct pm (works without adb since we are a Termux app), fall back to adb shell
     let cmd = 'pm list packages';
     if (type === 'thirdparty') cmd += ' -3';
     else if (type === 'system') cmd += ' -s';
-    const r = await runCmd(cmd + ' 2>/dev/null', 20);
-    let pkgs = r.stdout.split('\n').filter((l) => l.startsWith('package:')).map((l) => l.replace('package:', '').trim()).filter(Boolean);
+    let r = await shellCmd(cmd + ' 2>/dev/null', 20);
+    let pkgs = (r.stdout || '').split('\n').filter((l) => l.startsWith('package:')).map((l) => l.replace('package:', '').trim()).filter(Boolean);
     let viaAdb = false;
-    if (pkgs.length === 0) {
-      const r2 = await runCmd('adb shell pm list packages 2>/dev/null', 20);
+    if (pkgs.length === 0 && !rishConnected()) {
+      const r2 = await runCmd(`"${ADB_BIN}" shell pm list packages 2>/dev/null`, 20);
       pkgs = r2.stdout.split('\n').filter((l) => l.startsWith('package:')).map((l) => l.replace('package:', '').trim()).filter(Boolean);
       viaAdb = pkgs.length > 0;
     }
     pkgs.sort();
-    // Resolve launchable labels in one batched pass (faster than per-pkg dumpsys)
-    let labels = {};
-    try {
-      const lr = await runCmd('cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.LAUNCHER 2>/dev/null || pm list packages 2>/dev/null | head -1', 12);
-      // fallback: ignore labels
-      void lr;
-    } catch (_) {}
     const apps = pkgs.slice(0, max).map(pkg => ({ package: pkg, version: '' }));
     return sendJson(res, 200, { ok: true, type, count: apps.length, total: pkgs.length, apps, viaAdb });
   }
@@ -1194,7 +1177,7 @@ async function route(req, res) {
     if (!pkg) return sendJson(res, 400, { ok: false, error: 'package required' });
     if (!/^[a-zA-Z0-9._]+$/.test(pkg)) return sendJson(res, 400, { ok: false, error: 'invalid package name' });
     log(`android-launch pkg=${pkg} ip=${ip}`);
-    const r = await runCmd(`adb shell monkey -p ${shellQuote(pkg)} -c android.intent.category.LAUNCHER 1 2>&1`, 10);
+    const r = await shellCmd(`monkey -p ${shellQuote(pkg)} -c android.intent.category.LAUNCHER 1 2>&1`, 10);
     return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, output: r.stdout });
   }
 
@@ -1204,7 +1187,7 @@ async function route(req, res) {
     if (!pkg) return sendJson(res, 400, { ok: false, error: 'package required' });
     if (!/^[a-zA-Z0-9._]+$/.test(pkg)) return sendJson(res, 400, { ok: false, error: 'invalid package name' });
     log(`android-uninstall pkg=${pkg} ip=${ip}`);
-    const r = await runCmd(`adb shell pm uninstall ${shellQuote(pkg)} 2>&1`, 30);
+    const r = await shellCmd(`pm uninstall ${shellQuote(pkg)} 2>&1`, 30);
     return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, package: pkg, output: r.stdout + r.stderr });
   }
 
@@ -1212,7 +1195,7 @@ async function route(req, res) {
     let body; try { body = JSON.parse(await readBody(req, 8 * 1024)); } catch (e) { return sendJson(res, 400, { ok: false, error: 'invalid json' }); }
     const text = body.text || '';
     const safe = shellQuote(text.slice(0, 4000));
-    const r = await runCmd('termux-clipboard-set ' + safe + ' 2>/dev/null || printf %s ' + safe + ' | adb shell "cmd clipboard set primary 2>/dev/null"', 8);
+    const r = await runCmd('termux-clipboard-set ' + safe + ' 2>/dev/null || printf %s ' + safe + ' | ' + (rishConnected() ? `"${RISH_BIN}"` : `"${ADB_BIN}" shell`) + ' "cmd clipboard set primary 2>/dev/null"', 8);
     return sendJson(res, 200, { ok: true, set: text.length > 0, note: r.stderr || null });
   }
 
@@ -1221,7 +1204,7 @@ async function route(req, res) {
     const cmd = (body.cmd || '').trim();
     if (!cmd) return sendJson(res, 400, { ok: false, error: 'cmd required' });
     log(`android-shell cmd=${cmd.slice(0, 80)} ip=${ip}`);
-    const r = await runCmd('adb shell ' + cmd, body.timeout || 30);
+    const r = await shellCmd(cmd, body.timeout || 30);
     return sendJson(res, 200, { ok: true, stdout: r.stdout, stderr: r.stderr, exitCode: r.exitCode });
   }
 
@@ -1282,13 +1265,13 @@ async function route(req, res) {
     const apkPath = body.path;
     if (!apkPath) return sendJson(res, 400, { ok: false, error: 'path required' });
     log(`install-apk path=${apkPath} ip=${ip}`);
-    let hasAdb = await runCmd(`"${ADB_BIN}" get-state 2>/dev/null | grep -q device && echo yes`, 5);
-    if (hasAdb.stdout.trim() !== 'yes') {
+    let hasAdb = adbConnected();
+    if (!hasAdb) {
       log('install-apk adb not connected, attempting reconnect...');
       await ensureAdb().catch(() => {});
-      hasAdb = await runCmd(`"${ADB_BIN}" get-state 2>/dev/null | grep -q device && echo yes`, 5);
+      hasAdb = adbConnected();
     }
-    if (hasAdb.stdout.trim() === 'yes') {
+    if (hasAdb) {
       const r = await runCmd(`"${ADB_BIN}" install -r "${apkPath}" 2>&1`, 120);
       log(`install-apk adb result: exit=${r.exitCode} out=${(r.stdout+r.stderr).slice(0,200)}`);
       return sendJson(res, r.exitCode === 0 ? 200 : 500, { ok: r.exitCode === 0, method: 'adb', output: r.stdout + r.stderr });
@@ -1319,14 +1302,14 @@ async function route(req, res) {
     if (size < 1000) return sendJson(res, 500, { ok: false, error: 'download failed or too small', output: dl.stdout + dl.stderr });
 
     // Ensure ADB connected
-    let hasAdb = await runCmd(`"${ADB_BIN}" get-state 2>/dev/null | grep -q device && echo yes`, 5);
-    if (hasAdb.stdout.trim() !== 'yes') {
+    let hasAdb = adbConnected();
+    if (!hasAdb) {
       log('install-apk-url adb not connected, attempting reconnect...');
       await ensureAdb().catch(() => {});
-      hasAdb = await runCmd(`"${ADB_BIN}" get-state 2>/dev/null | grep -q device && echo yes`, 5);
+      hasAdb = adbConnected();
     }
 
-    if (hasAdb.stdout.trim() === 'yes') {
+    if (hasAdb) {
       // XAPK/APKS: extract and use install-multiple
       if (isXapk || isApks) {
         log(`install-apk-url extracting ${ext} bundle`);
@@ -1566,14 +1549,10 @@ async function route(req, res) {
     const current = loadConfig();
     const updated = { ...current };
     // Only allow updating known fields
-    const allowed = ['shizukuPort', 'sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
+    const allowed = ['sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
     for (const k of allowed) { if (body[k] !== undefined) updated[k] = body[k]; }
     saveConfig(updated);
     log(`config-update ip=${ip} fields=${Object.keys(body).join(',')}`);
-    // Apply Shizuku port change immediately
-    if (body.shizukuPort && body.shizukuPort !== current.shizukuPort) {
-      ensureAdb().catch(() => {});
-    }
     return sendJson(res, 200, { ok: true, config: updated });
   }
   if (pathname === '/api/config/restart' && method === 'POST') {
@@ -1595,6 +1574,7 @@ const server = https.createServer({ cert: fs.readFileSync(certFile), key: fs.rea
 });
 
 // ---- ADB auto-connect manager ----
+const RISH_BIN = '/data/data/com.termux/files/usr/bin/rish';
 const ADB_BIN = '/data/data/com.termux/files/usr/bin/adb';
 function adbCmd(args, timeoutSec) {
   return new Promise((resolve) => {
@@ -1603,36 +1583,43 @@ function adbCmd(args, timeoutSec) {
     child.on('error', () => resolve({ ok: false, stdout: '', stderr: 'adb not found', code: -1 }));
   });
 }
+function rishAvailable() {
+  try { return fs.existsSync(RISH_BIN) && fs.statSync(RISH_BIN).size > 50; } catch (_) { return false; }
+}
+function rishConnected() {
+  if (!rishAvailable()) return false;
+  try {
+    const s = require('child_process').execSync(`echo id | "${RISH_BIN}" 2>/dev/null`, { encoding: 'utf8', timeout: 10000 });
+    return s.includes('uid=');
+  } catch (_) { return false; }
+}
+function rishCmd(cmd, timeoutSec) {
+  const safe = cmd.replace(/'/g, "'\\''");
+  return runCmd(`echo '${safe}' | "${RISH_BIN}"`, timeoutSec || 30);
+}
 function adbConnected() {
   try {
     const s = require('child_process').execSync(`"${ADB_BIN}" get-state 2>/dev/null`, { encoding: 'utf8', timeout: 8000 });
     return s.trim() === 'device';
   } catch (_) { return false; }
 }
+function shellCmd(cmd, timeoutSec) {
+  if (rishConnected()) return rishCmd(cmd, timeoutSec);
+  if (adbConnected()) return runCmd(`"${ADB_BIN}" shell ${cmd}`, timeoutSec);
+  return runCmd(cmd, timeoutSec);
+}
 async function ensureAdb() {
-  if (adbConnected()) return true;
-  // Try Shizuku first (auto-detect on common ports)
-  for (const p of [9090, 9091, 9092]) {
-    try {
-      const s = require('child_process').execSync(`timeout 1 bash -c 'echo >/dev/tcp/127.0.0.1/${p}' 2>/dev/null && echo open`, { encoding: 'utf8', timeout: 3000 });
-      if (s.includes('open')) {
-        adbCmd(['kill-server'], 8).catch(() => {});
-        await new Promise(r => setTimeout(r, 1000));
-        await adbCmd(['start-server'], 15);
-        const r = await adbCmd(['connect', `127.0.0.1:${p}`], 20);
-        await new Promise(r => setTimeout(r, 1000));
-        if (adbConnected()) { saveAdbTarget(`127.0.0.1:${p}`); return true; }
-      }
-    } catch (_) {}
+  if (rishConnected() || adbConnected()) return true;
+  // Try saved adb target
+  if (adbTarget) {
+    adbCmd(['kill-server'], 8).catch(() => {});
+    await new Promise(r => setTimeout(r, 1500));
+    await adbCmd(['start-server'], 15);
+    const r = await adbCmd(['connect', adbTarget], 20);
+    await new Promise(r => setTimeout(r, 1000));
+    if (adbConnected()) return true;
   }
-  // Fallback to saved target
-  if (!adbTarget) return false;
-  adbCmd(['kill-server'], 8).catch(() => {});
-  await new Promise(r => setTimeout(r, 1500));
-  await adbCmd(['start-server'], 15);
-  const r = await adbCmd(['connect', adbTarget], 20);
-  await new Promise(r => setTimeout(r, 1000));
-  return adbConnected() || r.code === 0;
+  return rishConnected();
 }
 async function adbLoop() {
   try { await ensureAdb(); } catch (_) {}
