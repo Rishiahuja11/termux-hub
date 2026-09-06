@@ -1589,7 +1589,7 @@ function rishAvailable() {
 function rishConnected() {
   if (!rishAvailable()) return false;
   try {
-    const s = require('child_process').execSync(`echo id | "${RISH_BIN}" 2>/dev/null`, { encoding: 'utf8', timeout: 10000 });
+    const s = require('child_process').execFileSync('/data/data/com.termux/files/usr/bin/bash', ['-c', `echo id | "${RISH_BIN}"`], { encoding: 'utf8', timeout: 10000, env: process.env });
     return s.includes('uid=');
   } catch (_) { return false; }
 }
