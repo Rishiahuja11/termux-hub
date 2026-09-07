@@ -168,16 +168,21 @@ function animateValue(el, start, end, duration, suffix) {
 }
 
 // ── Dashboard ──
+function skeletonCard(label) {
+  return `<div class="skeleton-card"><div class="stat-header"><span class="stat-label">${label}</span></div><div class="skeleton skeleton-line h24 w40"></div><div class="progress-bar"><div class="skeleton skeleton-line" style="width:100%;height:4px"></div></div></div>`;
+}
+function skeletonQuickGrid() {
+  let h = '';
+  for (let i = 0; i < 7; i++) h += `<div class="skeleton-card" style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px"><div class="skeleton" style="width:48px;height:48px;border-radius:14px"></div><div class="skeleton skeleton-line w60" style="height:10px"></div><div class="skeleton skeleton-line w40" style="height:8px"></div></div>`;
+  return h;
+}
 async function renderDashboard(el) {
   el.innerHTML = `
     <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="stat-header"><span class="stat-label">Uptime</span><div class="stat-icon blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value blue" id="stat-uptime">--</div><div class="progress-bar"><div class="progress-fill blue" style="width:0%"></div></div></div>
-      <div class="stat-card"><div class="stat-header"><span class="stat-label">CPU Load</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg></div></div><div class="stat-value green" id="stat-cpu">--</div><div class="progress-bar"><div class="progress-fill green" id="stat-cpu-bar" style="width:0%"></div></div></div>
-      <div class="stat-card"><div class="stat-header"><span class="stat-label">Memory</span><div class="stat-icon orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg></div></div><div class="stat-value orange" id="stat-mem">--</div><div class="progress-bar"><div class="progress-fill orange" id="stat-mem-bar" style="width:0%"></div></div></div>
-      <div class="stat-card"><div class="stat-header"><span class="stat-label">Disk</span><div class="stat-icon purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg></div></div><div class="stat-value purple" id="stat-disk">--</div><div class="progress-bar"><div class="progress-fill purple" id="stat-disk-bar" style="width:0%"></div></div></div>
+      ${skeletonCard('Uptime')}${skeletonCard('CPU Load')}${skeletonCard('Memory')}${skeletonCard('Disk')}
     </div>
     <div class="section-title">Quick Actions</div>
-    <div class="quick-grid" id="quick-grid"></div>`;
+    <div class="quick-grid" id="quick-grid">${skeletonQuickGrid()}</div>`;
 
   const grid = $('#quick-grid');
   const items = [
@@ -201,10 +206,20 @@ async function renderDashboard(el) {
 
   function updateStats() {
     api('/api/system').then(s => {
+      const grid = $('#stats-grid');
+      if (!grid) return;
       const fmtUptime = sec => { if (!sec && sec !== 0) return '?'; const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
       const memPct = s.mem_total ? ((s.mem_used / s.mem_total) * 100) : 0;
       const diskPct = s.storage ? ((s.storage.used / s.storage.total) * 100) : 0;
       const cpuPct = s.cpu_load != null ? Math.min(parseFloat(s.cpu_load) * 10, 100) : 0;
+
+      if (!$('#stat-uptime')) {
+        grid.innerHTML = `
+          <div class="stat-card"><div class="stat-header"><span class="stat-label">Uptime</span><div class="stat-icon blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value blue" id="stat-uptime"></div><div class="progress-bar"><div class="progress-fill blue" style="width:0%"></div></div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-label">CPU Load</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></div></div><div class="stat-value green" id="stat-cpu"></div><div class="progress-bar"><div class="progress-fill green" id="stat-cpu-bar" style="width:0%"></div></div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-label">Memory</span><div class="stat-icon orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div></div><div class="stat-value orange" id="stat-mem"></div><div class="progress-bar"><div class="progress-fill orange" id="stat-mem-bar" style="width:0%"></div></div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-label">Disk</span><div class="stat-icon purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div></div><div class="stat-value purple" id="stat-disk"></div><div class="progress-bar"><div class="progress-fill purple" id="stat-disk-bar" style="width:0%"></div></div></div>`;
+      }
 
       const el = id => document.getElementById(id);
       if (el('stat-uptime')) el('stat-uptime').textContent = fmtUptime(s.uptime);
@@ -257,8 +272,13 @@ async function termExec() {
 
 // ── File Manager ──
 let fmRoot = null;
+function skeletonFmList() {
+  let h = '';
+  for (let i = 0; i < 12; i++) h += `<div class="fm-item skeleton" style="height:42px"></div>`;
+  return h;
+}
 async function renderFiles(el) {
-  el.innerHTML = '<div class="fm-toolbar" id="fm-toolbar"></div><div class="fm-list" id="fm-list"><div class="empty">Loading...</div></div>';
+  el.innerHTML = '<div class="fm-toolbar" id="fm-toolbar"></div><div class="fm-list" id="fm-list">' + skeletonFmList() + '</div>';
   if (!fmRoot) { try { const s = await api('/api/system'); fmRoot = s.home || '/data/data/com.termux/files/home'; } catch (_) { fmRoot = '/data/data/com.termux/files/home'; } }
   if (state.fmPath == null) state.fmPath = fmRoot;
   fmRender();
@@ -361,8 +381,13 @@ async function fmMultiAction(action) {
 }
 
 // ── Apps ──
+function skeletonAppGrid() {
+  let h = '';
+  for (let i = 0; i < 12; i++) h += `<div class="skeleton-card" style="padding:16px;display:flex;align-items:center;gap:12px"><div class="skeleton" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="skeleton skeleton-line w60" style="height:12px"></div><div class="skeleton skeleton-line w40" style="height:10px"></div></div></div>`;
+  return h;
+}
 async function renderApps(el) {
-  el.innerHTML = '<div class="app-grid" id="app-grid"><div class="empty">Loading...</div></div>';
+  el.innerHTML = '<div class="app-grid" id="app-grid">' + skeletonAppGrid() + '</div>';
   try {
     const r = await api('/api/store');
     const apps = r.apps || [];
@@ -404,8 +429,13 @@ async function appUninstall(id) {
 
 // ── Store ──
 let storeTab = 'local';
+function skeletonStoreGrid() {
+  let h = '';
+  for (let i = 0; i < 6; i++) h += `<div class="skeleton-card" style="padding:14px;display:flex;gap:12px"><div class="skeleton" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px"><div class="skeleton skeleton-line w60" style="height:13px"></div><div class="skeleton skeleton-line w80" style="height:11px"></div><div class="skeleton skeleton-line w40" style="height:10px"></div><div class="skeleton" style="width:60px;height:28px;border-radius:6px;margin-top:4px"></div></div></div>`;
+  return h;
+}
 async function renderStore(el) {
-  el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" id="store-tabs"></div><div style="margin-bottom:14px" id="store-search"></div><div class="store-grid" id="store-grid"><div class="empty">Loading...</div></div>`;
+  el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" id="store-tabs"></div><div style="margin-bottom:14px" id="store-search"></div><div class="store-grid" id="store-grid">${skeletonStoreGrid()}</div>`;
   const tabs = $('#store-tabs');
   ['local', 'fdroid', 'apkpure', 'termux'].forEach(t => {
     const b = document.createElement('button');
@@ -493,7 +523,7 @@ let androidFullscreen = false;
 async function renderAndroid(el) {
   if (androidPollTimer) { clearInterval(androidPollTimer); androidPollTimer = null; }
   if (androidStreamImg) { androidStreamImg.src = ''; androidStreamImg = null; }
-  el.innerHTML = `<div class="android-layout" id="android-layout"><div class="android-phone" id="screen-box"><div class="empty">Detecting connection...</div></div><div class="android-ctrl" id="android-ctrl"></div></div>`;
+  el.innerHTML = `<div class="android-layout" id="android-layout"><div class="android-phone" id="screen-box"><div class="skeleton" style="width:100%;height:100%;border-radius:var(--radius-lg)"></div></div><div class="android-ctrl" id="android-ctrl"><div class="skeleton-card" style="height:100%"><div class="skeleton skeleton-line w40" style="height:16px;margin-bottom:16px"></div><div class="skeleton skeleton-line w80" style="height:12px;margin-bottom:8px"></div><div class="skeleton skeleton-line w60" style="height:12px;margin-bottom:8px"></div><div class="skeleton skeleton-line w80" style="height:12px;margin-bottom:8px"></div><div class="skeleton skeleton-line w40" style="height:12px"></div></div></div></div>`;
   let st = { adb: false, method: 'none' };
   try { st = await api('/api/android/status'); } catch (_) {}
   let shizuku = { running: false, connected: false };
@@ -593,8 +623,13 @@ async function androidBrightness(v) { try { await api('/api/android/display', { 
 async function androidLaunch(pkg) { try { await api('/api/android/apps/launch', { method: 'POST', body: JSON.stringify({ package: pkg }) }); } catch (_) {} }
 
 // ── Docs ──
+function skeletonDocList() {
+  let h = '';
+  for (let i = 0; i < 8; i++) h += `<div class="skeleton-card" style="padding:14px"><div class="skeleton skeleton-line w40" style="height:13px;margin-bottom:6px"></div><div class="skeleton skeleton-line w80" style="height:11px"></div></div>`;
+  return h;
+}
 async function renderDocs(el) {
-  el.innerHTML = `<div style="margin-bottom:14px"><input id="docs-q" placeholder="Search CLI tools..."></div><div id="docs-list" style="display:flex;flex-direction:column;gap:6px"></div>`;
+  el.innerHTML = `<div style="margin-bottom:14px"><input id="docs-q" placeholder="Search CLI tools..."></div><div id="docs-list" style="display:flex;flex-direction:column;gap:6px">${skeletonDocList()}</div>`;
   $('#docs-q')?.addEventListener('input', () => loadDocs());
   await loadDocs();
 }
@@ -622,7 +657,7 @@ async function docDetail(name) {
 
 // ── Logs ──
 async function renderLogs(el) {
-  el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="btn-sm active" onclick="loadLogs('access')" id="log-access">Access Log</button><button class="btn-sm" onclick="loadLogs('package')" id="log-package">Package Log</button><button class="btn-sm" onclick="loadLogs('run')" id="log-run">Run Log</button><span style="flex:1"></span><button class="btn-sm" onclick="renderLogs($('#views'))">&#8635;</button></div><div class="term-box" style="height:calc(100vh - 200px)"><div id="log-output" style="flex:1;overflow-y:auto;padding:16px;font-family:var(--font-mono);font-size:11px;line-height:1.7;color:var(--fg2);white-space:pre-wrap;word-break:break-all">Loading...</div></div>`;
+  el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="btn-sm active" onclick="loadLogs('access')" id="log-access">Access Log</button><button class="btn-sm" onclick="loadLogs('package')" id="log-package">Package Log</button><button class="btn-sm" onclick="loadLogs('run')" id="log-run">Run Log</button><span style="flex:1"></span><button class="btn-sm" onclick="renderLogs($('#views'))">&#8635;</button></div><div class="term-box" style="height:calc(100vh - 200px)"><div id="log-output" style="flex:1;overflow-y:auto;padding:16px"><div class="skeleton skeleton-line w80" style="height:11px;margin-bottom:6px"></div><div class="skeleton skeleton-line w60" style="height:11px;margin-bottom:6px"></div><div class="skeleton skeleton-line w80" style="height:11px;margin-bottom:6px"></div><div class="skeleton skeleton-line w40" style="height:11px;margin-bottom:6px"></div><div class="skeleton skeleton-line w80" style="height:11px;margin-bottom:6px"></div><div class="skeleton skeleton-line w60" style="height:11px"></div></div></div>`;
   await loadLogs('access');
 }
 
@@ -632,6 +667,7 @@ async function loadLogs(type) {
   if (btn) btn.classList.add('active');
   const out = $('#log-output');
   if (!out) return;
+  out.style.cssText = 'flex:1;overflow-y:auto;padding:16px;font-family:var(--font-mono);font-size:11px;line-height:1.7;color:var(--fg2);white-space:pre-wrap;word-break:break-all';
   try {
     const r = await api('/api/logs?which=' + type + '&lines=200');
     out.textContent = (r.lines || []).join('\n') || r.error || 'No log data';
