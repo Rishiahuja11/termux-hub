@@ -1251,9 +1251,9 @@ async function route(req, res) {
     }
     const apps = lines.slice(0, max).map(line => {
       const parts = line.replace('package:', '').trim();
-      const eqIdx = parts.lastIndexOf('=');
-      const apkPath = eqIdx > 0 ? parts.substring(eqIdx + 1) : '';
-      const pkg = eqIdx > 0 ? parts.substring(0, eqIdx) : parts;
+      const eqIdx = parts.indexOf('=');
+      const apkPath = eqIdx > 0 ? parts.substring(0, eqIdx) : '';
+      const pkg = eqIdx > 0 ? parts.substring(eqIdx + 1) : parts;
       const name = pkg.split('.').pop().replace(/[^a-zA-Z0-9]/g, ' ').trim();
       return { package: pkg, name: name || pkg, apkPath, version: '' };
     }).sort((a, b) => a.package.localeCompare(b.package));
