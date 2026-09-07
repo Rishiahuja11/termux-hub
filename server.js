@@ -1251,7 +1251,7 @@ async function route(req, res) {
     }
     const apps = lines.slice(0, max).map(line => {
       const parts = line.replace('package:', '').trim();
-      const eqIdx = parts.indexOf('=');
+      const eqIdx = parts.lastIndexOf('=');
       const apkPath = eqIdx > 0 ? parts.substring(0, eqIdx) : '';
       const pkg = eqIdx > 0 ? parts.substring(eqIdx + 1) : parts;
       const name = pkg.split('.').pop().replace(/[^a-zA-Z0-9]/g, ' ').trim();
