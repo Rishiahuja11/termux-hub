@@ -32,6 +32,19 @@ const VIEWS = [
 
 let state = { view: 'dashboard', fmPath: null, fmSelected: [], termHistory: [], termHistIdx: -1 };
 
+// ── Particles ──
+function initParticles() {
+  const container = document.createElement('div');
+  container.id = 'particles';
+  document.body.appendChild(container);
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${3+Math.random()*3}s;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px`;
+    container.appendChild(p);
+  }
+}
+
 function toast(msg, type) {
   const t = $('#toast');
   t.textContent = msg;
@@ -136,6 +149,22 @@ function renderView(id) {
   else if (id === 'settings') renderSettings(views);
 }
 
+// ── Animated Counter ──
+function animateValue(el, start, end, duration, suffix) {
+  suffix = suffix || '';
+  const range = end - start;
+  const startTime = performance.now();
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = start + range * ease;
+    el.textContent = (Number.isInteger(end) ? Math.round(current) : current.toFixed(1)) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
 // ── Dashboard ──
 async function renderDashboard(el) {
   el.innerHTML = `
@@ -162,16 +191,14 @@ async function renderDashboard(el) {
   items.forEach((it, i) => {
     const d = document.createElement('div');
     d.className = 'quick-card';
-    d.style.animation = `cardIn .4s ${i * 0.06}s both`;
+    d.style.animation = `cardIn .5s ${i * 0.08}s both`;
     d.onclick = () => navigateTo(it.view);
     d.innerHTML = `<div class="quick-icon ${it.cls}">${ICONS[it.ico] || ''}</div><div class="quick-name">${it.name}</div><div class="quick-desc">${it.desc}</div>`;
     grid.appendChild(d);
   });
 
-  // Load system stats
   api('/api/system').then(s => {
     const fmtUptime = sec => { if (!sec && sec !== 0) return '?'; const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
-    const cap = b => b ? (b > 1073741824 ? (b/1073741824).toFixed(1)+' GB' : b > 1048576 ? (b/1048576).toFixed(0)+' MB' : b > 1024 ? (b/1024).toFixed(0)+' KB' : b+' B') : '?';
     const memPct = s.mem_total ? ((s.mem_used / s.mem_total) * 100) : 0;
     const diskPct = s.storage ? ((s.storage.used / s.storage.total) * 100) : 0;
     const cpuPct = s.cpu_load != null ? Math.min(parseFloat(s.cpu_load) * 10, 100) : 0;
@@ -188,7 +215,7 @@ async function renderDashboard(el) {
       if (cpuBar) cpuBar.style.width = cpuPct + '%';
       if (memBar) memBar.style.width = memPct + '%';
       if (diskBar) diskBar.style.width = diskPct + '%';
-    }, 100);
+    }, 200);
   }).catch(() => {});
 }
 
@@ -197,7 +224,7 @@ function renderTerminal(el) {
   el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span>TermuX Hub Terminal</span></div><div id="term-out"></div><div class="term-input-row"><input id="term-input" type="text" placeholder="Enter command..." autocomplete="off"><button class="btn-primary" onclick="termExec()">Run</button></div></div>`;
   const out = $('#term-out');
   const inp = $('#term-input');
-  if (state.termHistory.length === 0) out.innerHTML = '<span style="color:var(--accent2)">Welcome to TermuX Hub Terminal</span>\n';
+  if (state.termHistory.length === 0) out.innerHTML = '<span style="color:var(--accent)">Welcome to TermuX Hub Terminal</span>\n<span style="color:var(--fg3)">Type commands below. Use ↑/↓ for history.</span>\n\n';
   inp.focus();
   inp.onkeydown = async e => {
     if (e.key === 'Enter') termExec();
@@ -213,7 +240,7 @@ async function termExec() {
   if (!cmd) return;
   state.termHistory.push(cmd);
   state.termHistIdx = state.termHistory.length;
-  out.innerHTML += `<span style="color:var(--accent2)">$</span> ${escH(cmd)}\n`;
+  out.innerHTML += `<span style="color:var(--accent)">$</span> <span style="color:var(--fg)">${escH(cmd)}</span>\n`;
   inp.value = '';
   try {
     const r = await api('/exec', { method: 'POST', body: JSON.stringify({ cmd, timeout: 120 }) });
@@ -263,9 +290,10 @@ async function fmRender() {
     const entries = (r.entries || []).sort((a, b) => (b.isDir ? 1 : 0) - (a.isDir ? 1 : 0) || a.name.localeCompare(b.name));
     if (entries.length === 0) { list.innerHTML = '<div class="empty">Empty directory</div>'; return; }
     list.innerHTML = '';
-    entries.forEach(e => {
+    entries.forEach((e, i) => {
       const d = document.createElement('div');
       d.className = 'fm-item';
+      d.style.animation = `cardIn .3s ${i * 0.03}s both`;
       const ico = e.isDir ? '&#128193;' : fileIcon(e.name);
       const meta = e.isDir ? '' : fmtSize(e.size);
       d.innerHTML = `<span class="icon">${ico}</span><span class="name">${escH(e.name)}</span><span class="meta">${meta}</span>`;
@@ -659,6 +687,8 @@ function closeModal() { $('#modal-bg')?.remove(); }
 function closeSidebar() { $('#sidebar')?.classList.remove('open'); }
 
 // ── Init ──
+initParticles();
+
 $('#hamburger')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
 document.addEventListener('click', e => { if (!e.target.closest('.sidebar') && !e.target.closest('.hamburger')) closeSidebar(); });
 $('#refresh')?.addEventListener('click', () => renderView(state.view));
