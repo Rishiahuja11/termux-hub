@@ -31,6 +31,7 @@ const VIEWS = [
 ];
 
 let state = { view: 'dashboard', fmPath: null, fmSelected: [], termHistory: [], termHistIdx: -1 };
+let dashboardRefreshTimer = null;
 
 // ── Particles ──
 function initParticles() {
@@ -136,6 +137,7 @@ function renderView(id) {
     if (androidStreamImg) { androidStreamImg.src = ''; androidStreamImg = null; }
     if (androidFullscreen) { androidFullscreen = false; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }
   }
+  if (id !== 'dashboard' && dashboardRefreshTimer) { clearInterval(dashboardRefreshTimer); dashboardRefreshTimer = null; }
   const views = $('#views');
   views.scrollTop = 0;
   if (id === 'dashboard') renderDashboard(views);
@@ -197,26 +199,29 @@ async function renderDashboard(el) {
     grid.appendChild(d);
   });
 
-  api('/api/system').then(s => {
-    const fmtUptime = sec => { if (!sec && sec !== 0) return '?'; const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
-    const memPct = s.mem_total ? ((s.mem_used / s.mem_total) * 100) : 0;
-    const diskPct = s.storage ? ((s.storage.used / s.storage.total) * 100) : 0;
-    const cpuPct = s.cpu_load != null ? Math.min(parseFloat(s.cpu_load) * 10, 100) : 0;
+  function updateStats() {
+    api('/api/system').then(s => {
+      const fmtUptime = sec => { if (!sec && sec !== 0) return '?'; const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
+      const memPct = s.mem_total ? ((s.mem_used / s.mem_total) * 100) : 0;
+      const diskPct = s.storage ? ((s.storage.used / s.storage.total) * 100) : 0;
+      const cpuPct = s.cpu_load != null ? Math.min(parseFloat(s.cpu_load) * 10, 100) : 0;
 
-    $('#stat-uptime').textContent = fmtUptime(s.uptime);
-    $('#stat-cpu').textContent = s.cpu_load != null ? s.cpu_load : '?';
-    $('#stat-mem').textContent = memPct.toFixed(0) + '%';
-    $('#stat-disk').textContent = diskPct.toFixed(0) + '%';
+      const el = id => document.getElementById(id);
+      if (el('stat-uptime')) el('stat-uptime').textContent = fmtUptime(s.uptime);
+      if (el('stat-cpu')) el('stat-cpu').textContent = s.cpu_load != null ? s.cpu_load : '?';
+      if (el('stat-mem')) el('stat-mem').textContent = memPct.toFixed(0) + '%';
+      if (el('stat-disk')) el('stat-disk').textContent = diskPct.toFixed(0) + '%';
 
-    setTimeout(() => {
-      const cpuBar = $('#stat-cpu-bar');
-      const memBar = $('#stat-mem-bar');
-      const diskBar = $('#stat-disk-bar');
-      if (cpuBar) cpuBar.style.width = cpuPct + '%';
-      if (memBar) memBar.style.width = memPct + '%';
-      if (diskBar) diskBar.style.width = diskPct + '%';
-    }, 200);
-  }).catch(() => {});
+      setTimeout(() => {
+        if (el('stat-cpu-bar')) el('stat-cpu-bar').style.width = cpuPct + '%';
+        if (el('stat-mem-bar')) el('stat-mem-bar').style.width = memPct + '%';
+        if (el('stat-disk-bar')) el('stat-disk-bar').style.width = diskPct + '%';
+      }, 100);
+    }).catch(() => {});
+  }
+  updateStats();
+  if (dashboardRefreshTimer) clearInterval(dashboardRefreshTimer);
+  dashboardRefreshTimer = setInterval(updateStats, 5000);
 }
 
 // ── Terminal ──

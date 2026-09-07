@@ -54,6 +54,20 @@ function verifyPassword(pw, stored) {
     return crypto.timingSafeEqual(Buffer.from(h.hash, 'hex'), Buffer.from(stored.hash, 'hex'));
   } catch (_) { return false; }
 }
+function sanitizeDesc(text) {
+  if (!text) return '';
+  return text
+    .replace(/```[\s\S]*?```/g, '') // code blocks
+    .replace(/`[^`]*`/g, '') // inline code
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links -> text
+    .replace(/[#*_~>]/g, '') // markdown symbols
+    .replace(/\\n/g, ' ') // literal \n
+    .replace(/\n+/g, ' ') // newlines
+    .replace(/<[^>]+>/g, '') // HTML tags
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 300);
+}
 function createSession(username) {
   const token = crypto.randomBytes(48).toString('hex');
   return withFileLock('sessions', () => {
@@ -343,7 +357,7 @@ async function searchFDroid(q) {
     icon: p.icon, version: p.suggestedVersionName || '',
     source: 'fdroid', size: 0,
     apkUrl: p.suggestedVersionCode ? `https://f-droid.org/repo/${p.packageName}_${p.suggestedVersionCode}.apk` : '',
-    license: p.license || '', description: p.description || ''
+    license: p.license || '', description: sanitizeDesc(p.description || p.summary || '')
   }));
 }
 
@@ -369,7 +383,7 @@ async function gatherFDroidDetail(id) {
   if (!p) return { name: id, icon: '', screenshots: [], description: '', version: '', size: '', rating: '' };
   return {
     name: p.name || id, icon: p.icon || `https://f-droid.org/repo/icons/${id}.png`,
-    screenshots: [], description: p.description || p.summary || '', version: p.suggestedVersionName || '', size: '',
+    screenshots: [], description: sanitizeDesc(p.description || p.summary || ''), version: p.suggestedVersionName || '', size: '',
     apkUrl: p.suggestedVersionCode ? `https://f-droid.org/repo/${id}_${p.suggestedVersionCode}.apk` : '',
     license: p.license || '', rating: '', categories: p.categories || []
   };
@@ -1224,20 +1238,26 @@ async function route(req, res) {
   if (pathname === '/api/android/apps' && method === 'GET') {
     const type = url.searchParams.get('type') || 'all';
     const max = Math.min(Math.max(parseInt(url.searchParams.get('max') || '250', 10) || 250, 10), 400);
-    let cmd = 'pm list packages';
+    let cmd = 'pm list packages -f';
     if (type === 'thirdparty') cmd += ' -3';
     else if (type === 'system') cmd += ' -s';
     let r = await shellCmd(cmd + ' 2>/dev/null', 20);
-    let pkgs = (r.stdout || '').split('\n').filter((l) => l.startsWith('package:')).map((l) => l.replace('package:', '').trim()).filter(Boolean);
+    let lines = (r.stdout || '').split('\n').filter((l) => l.startsWith('package:'));
     let viaAdb = false;
-    if (pkgs.length === 0 && !rishConnected()) {
-      const r2 = await runCmd(`"${ADB_BIN}" shell pm list packages 2>/dev/null`, 20);
-      pkgs = r2.stdout.split('\n').filter((l) => l.startsWith('package:')).map((l) => l.replace('package:', '').trim()).filter(Boolean);
-      viaAdb = pkgs.length > 0;
+    if (lines.length === 0 && !rishConnected()) {
+      const r2 = await runCmd(`"${ADB_BIN}" shell pm list packages -f 2>/dev/null`, 20);
+      lines = r2.stdout.split('\n').filter((l) => l.startsWith('package:'));
+      viaAdb = lines.length > 0;
     }
-    pkgs.sort();
-    const apps = pkgs.slice(0, max).map(pkg => ({ package: pkg, version: '' }));
-    return sendJson(res, 200, { ok: true, type, count: apps.length, total: pkgs.length, apps, viaAdb });
+    const apps = lines.slice(0, max).map(line => {
+      const parts = line.replace('package:', '').trim();
+      const eqIdx = parts.lastIndexOf('=');
+      const apkPath = eqIdx > 0 ? parts.substring(eqIdx + 1) : '';
+      const pkg = eqIdx > 0 ? parts.substring(0, eqIdx) : parts;
+      const name = pkg.split('.').pop().replace(/[^a-zA-Z0-9]/g, ' ').trim();
+      return { package: pkg, name: name || pkg, apkPath, version: '' };
+    }).sort((a, b) => a.package.localeCompare(b.package));
+    return sendJson(res, 200, { ok: true, type, count: apps.length, total: apps.length, apps, viaAdb });
   }
 
   if (pathname === '/api/android/apps/launch' && method === 'POST') {
