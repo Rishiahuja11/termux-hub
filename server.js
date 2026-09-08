@@ -1662,6 +1662,190 @@ const server = https.createServer({ cert: fs.readFileSync(certFile), key: fs.rea
   route(req, res).catch((e) => { if (!res.headersSent) sendJson(res, 500, { ok: false, error: 'internal' }); });
 });
 
+// ── WebSocket Terminal (raw implementation, no deps) ──
+const activeTerminals = new Map();
+function wsAccept(socket) {
+  const key = socket.headers['sec-websocket-key'];
+  const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-5AB9C4F2C1E1').digest('base64');
+  socket.writeHead(101, { 'Upgrade': 'websocket', 'Connection': 'Upgrade', 'Sec-WebSocket-Accept': accept });
+  socket.setNoDelay(true);
+  socket.setKeepAlive(true, 30000);
+  return socket;
+}
+function wsSend(socket, data) {
+  if (socket.destroyed) return;
+  const payload = Buffer.isBuffer(data) ? data : Buffer.from(String(data));
+  const len = payload.length;
+  let header;
+  if (len < 126) {
+    header = Buffer.alloc(2);
+    header[0] = 0x81;
+    header[1] = len;
+  } else if (len < 65536) {
+    header = Buffer.alloc(4);
+    header[0] = 0x81;
+    header[1] = 126;
+    header.writeUInt16BE(len, 2);
+  } else {
+    header = Buffer.alloc(10);
+    header[0] = 0x81;
+    header[1] = 127;
+    header.writeUInt32BE(0, 2);
+    header.writeUInt32BE(len, 6);
+  }
+  try { socket.write(Buffer.concat([header, payload])); } catch (_) {}
+}
+function wsSendBinary(socket, data) {
+  if (socket.destroyed) return;
+  const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
+  const len = payload.length;
+  let header;
+  if (len < 126) {
+    header = Buffer.alloc(2);
+    header[0] = 0x82;
+    header[1] = len;
+  } else if (len < 65536) {
+    header = Buffer.alloc(4);
+    header[0] = 0x82;
+    header[1] = 126;
+    header.writeUInt16BE(len, 2);
+  } else {
+    header = Buffer.alloc(10);
+    header[0] = 0x82;
+    header[1] = 127;
+    header.writeUInt32BE(0, 2);
+    header.writeUInt32BE(len, 6);
+  }
+  try { socket.write(Buffer.concat([header, payload])); } catch (_) {}
+}
+function wsClose(socket, code) {
+  if (socket.destroyed) return;
+  try {
+    const buf = Buffer.alloc(4);
+    buf[0] = 0x88;
+    buf[1] = 2;
+    buf.writeUInt16BE(code || 1000, 2);
+    socket.write(buf);
+  } catch (_) {}
+  setTimeout(() => { try { socket.destroy(); } catch (_) {} }, 200);
+}
+function wsParseFrames(buffer) {
+  const frames = [];
+  let offset = 0;
+  while (offset < buffer.length) {
+    if (buffer.length - offset < 2) break;
+    const byte0 = buffer[offset];
+    const byte1 = buffer[offset + 1];
+    const opcode = byte0 & 0x0f;
+    const masked = !!(byte1 & 0x80);
+    let payloadLen = byte1 & 0x7f;
+    let headerLen = 2;
+    if (payloadLen === 126) {
+      if (buffer.length - offset < 4) break;
+      payloadLen = buffer.readUInt16BE(offset + 2);
+      headerLen = 4;
+    } else if (payloadLen === 127) {
+      if (buffer.length - offset < 10) break;
+      payloadLen = buffer.readUInt32BE(offset + 6);
+      headerLen = 10;
+    }
+    const maskLen = masked ? 4 : 0;
+    if (buffer.length - offset < headerLen + maskLen + payloadLen) break;
+    let payload = buffer.slice(offset + headerLen + maskLen, offset + headerLen + maskLen + payloadLen);
+    if (masked) {
+      const mask = buffer.slice(offset + headerLen, offset + headerLen + 4);
+      for (let i = 0; i < payload.length; i++) payload[i] ^= mask[i % 4];
+    }
+    frames.push({ opcode, payload });
+    offset += headerLen + maskLen + payloadLen;
+  }
+  return { frames, remaining: buffer.slice(offset) };
+}
+
+server.on('upgrade', (req, socket, head) => {
+  const url = new URL(req.url, 'https://localhost');
+  if (url.pathname !== '/ws/terminal') { socket.destroy(); return; }
+  const token = url.searchParams.get('token');
+  const username = validateSession(token);
+  if (!username) { wsAccept(socket); wsClose(socket, 4001); return; }
+
+  const ws = wsAccept(socket);
+  let buf = head || Buffer.alloc(0);
+  let shellProc = null;
+  let termId = crypto.randomBytes(8).toString('hex');
+  const termCols = parseInt(url.searchParams.get('cols') || '80', 10);
+  const termRows = parseInt(url.searchParams.get('rows') || '24', 10);
+
+  function spawnShell(cols, rows) {
+    const shell = process.env.SHELL || '/data/data/com.termux/files/usr/bin/bash';
+    const env = Object.assign({}, process.env, {
+      TERM: 'xterm-256color',
+      COLORTERM: 'truecolor',
+      COLUMNS: String(cols || 80),
+      LINES: String(rows || 24),
+    });
+    shellProc = spawn(shell, ['--login'], {
+      cwd: os.homedir(),
+      env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    shellProc.stdout.on('data', d => wsSendBinary(ws, d));
+    shellProc.stderr.on('data', d => wsSendBinary(ws, d));
+    shellProc.on('close', (code) => {
+      wsSend(ws, JSON.stringify({ type: 'exit', code }));
+      wsClose(ws, 1000);
+    });
+    shellProc.on('error', () => { wsClose(ws, 1011); });
+    activeTerminals.set(termId, shellProc);
+    return shellProc;
+  }
+
+  spawnShell(termCols, termRows);
+  wsSend(ws, JSON.stringify({ type: 'connected', termId }));
+
+  ws.on('data', (chunk) => {
+    buf = Buffer.concat([buf, chunk]);
+    const parsed = wsParseFrames(buf);
+    buf = parsed.remaining;
+    for (const frame of parsed.frames) {
+      if (frame.opcode === 0x08) { if (shellProc) shellProc.kill(); wsClose(ws, 1000); return; }
+      if (frame.opcode === 0x09) {
+        const pong = Buffer.alloc(2);
+        pong[0] = 0x8a;
+        pong[1] = 0;
+        try { ws.write(pong); } catch (_) {}
+        continue;
+      }
+      if (frame.opcode === 0x01) {
+        try {
+          const msg = JSON.parse(frame.payload.toString());
+          if (msg.type === 'input' && shellProc && !shellProc.killed) {
+            shellProc.stdin.write(msg.data);
+          } else if (msg.type === 'resize' && shellProc && !shellProc.killed) {
+            try {
+              const winsize = Buffer.alloc(8);
+              winsize.writeUInt16BE(msg.cols || 80, 0);
+              winsize.writeUInt16BE(msg.rows || 24, 2);
+              winsize.writeUInt16BE(0, 4);
+              winsize.writeUInt16BE(0, 6);
+              const { execSync } = require('child_process');
+              execSync(`kill -s SIGWINCH ${shellProc.pid}`, { stdio: 'ignore' });
+            } catch (_) {}
+          }
+        } catch (_) {}
+      }
+    }
+  });
+  ws.on('close', () => {
+    if (shellProc && !shellProc.killed) shellProc.kill();
+    activeTerminals.delete(termId);
+  });
+  ws.on('error', () => {
+    if (shellProc && !shellProc.killed) shellProc.kill();
+    activeTerminals.delete(termId);
+  });
+});
+
 // ---- ADB auto-connect manager ----
 const RISH_BIN = '/data/data/com.termux/files/usr/bin/rish';
 const ADB_BIN = '/data/data/com.termux/files/usr/bin/adb';

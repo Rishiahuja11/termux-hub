@@ -137,6 +137,11 @@ function renderView(id) {
     if (androidStreamImg) { androidStreamImg.src = ''; androidStreamImg = null; }
     if (androidFullscreen) { androidFullscreen = false; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }
   }
+  if (id !== 'terminal') {
+    if (termSocket) { try { termSocket.close(); } catch (_) {} termSocket = null; }
+    if (termInstance) { if (termInstance._resizeObserver) termInstance._resizeObserver.disconnect(); termInstance.dispose(); termInstance = null; }
+    if (termReconnectTimer) { clearTimeout(termReconnectTimer); termReconnectTimer = null; }
+  }
   if (id !== 'dashboard' && dashboardRefreshTimer) { clearInterval(dashboardRefreshTimer); dashboardRefreshTimer = null; }
   const views = $('#views');
   views.scrollTop = 0;
@@ -239,35 +244,140 @@ async function renderDashboard(el) {
   dashboardRefreshTimer = setInterval(updateStats, 5000);
 }
 
-// ── Terminal ──
-function renderTerminal(el) {
-  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span>TermuX Hub Terminal</span></div><div id="term-out"></div><div class="term-input-row"><input id="term-input" type="text" placeholder="Enter command..." autocomplete="off"><button class="btn-primary" onclick="termExec()">Run</button></div></div>`;
-  const out = $('#term-out');
-  const inp = $('#term-input');
-  if (state.termHistory.length === 0) out.innerHTML = '<span style="color:var(--accent)">Welcome to TermuX Hub Terminal</span>\n<span style="color:var(--fg3)">Type commands below. Use ↑/↓ for history.</span>\n\n';
-  inp.focus();
-  inp.onkeydown = async e => {
-    if (e.key === 'Enter') termExec();
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (state.termHistIdx > 0) { state.termHistIdx--; inp.value = state.termHistory[state.termHistIdx]; } }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); if (state.termHistIdx < state.termHistory.length - 1) { state.termHistIdx++; inp.value = state.termHistory[state.termHistIdx]; } else { state.termHistIdx = state.termHistory.length; inp.value = ''; } }
-  };
-}
+// ── Terminal (WebSocket + xterm.js) ──
+let termInstance = null;
+let termSocket = null;
+let termReconnectTimer = null;
 
-async function termExec() {
-  const inp = $('#term-input');
-  const out = $('#term-out');
-  const cmd = inp.value.trim();
-  if (!cmd) return;
-  state.termHistory.push(cmd);
-  state.termHistIdx = state.termHistory.length;
-  out.innerHTML += `<span style="color:var(--accent)">$</span> <span style="color:var(--fg)">${escH(cmd)}</span>\n`;
-  inp.value = '';
-  try {
-    const r = await api('/exec', { method: 'POST', body: JSON.stringify({ cmd, timeout: 120 }) });
-    const outText = (r.stdout || '') + (r.stderr || '');
-    if (outText) out.innerHTML += escH(outText);
-  } catch (_) { out.innerHTML += '<span style="color:var(--red)">Error running command</span>\n'; }
-  out.scrollTop = out.scrollHeight;
+function renderTerminal(el) {
+  if (termSocket) { try { termSocket.close(); } catch (_) {} termSocket = null; }
+  if (termInstance) { termInstance.dispose(); termInstance = null; }
+  if (termReconnectTimer) { clearTimeout(termReconnectTimer); termReconnectTimer = null; }
+
+  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span id="term-bar-title">TermuX Hub Terminal</span></div><div id="term-container" style="flex:1;overflow:hidden"></div><div class="term-input-row" id="term-status-bar" style="display:flex;align-items:center;padding:4px 12px;font-size:11px;color:var(--fg3);gap:12px"><span id="term-status">Connecting...</span><span style="flex:1"></span><span id="term-size">80x24</span></div></div>`;
+
+  if (typeof Terminal === 'undefined') {
+    $('#term-container').innerHTML = '<div class="empty" style="padding:48px"><h3>xterm.js not loaded</h3><p>Check your internet connection</p></div>';
+    return;
+  }
+
+  const term = new Terminal({
+    cursorBlink: true,
+    cursorStyle: 'bar',
+    fontSize: 13,
+    fontFamily: "'Fira Code', 'SF Mono', 'JetBrains Mono', monospace",
+    theme: {
+      background: '#0F172A',
+      foreground: '#F8FAFC',
+      cursor: '#22C55E',
+      cursorAccent: '#0F172A',
+      selectionBackground: 'rgba(34,197,94,0.25)',
+      black: '#1E293B',
+      red: '#EF4444',
+      green: '#22C55E',
+      yellow: '#F59E0B',
+      blue: '#3B82F6',
+      magenta: '#A855F7',
+      cyan: '#06B6D4',
+      white: '#F8FAFC',
+      brightBlack: '#64748B',
+      brightRed: '#F87171',
+      brightGreen: '#4ADE80',
+      brightYellow: '#FBBF24',
+      brightBlue: '#60A5FA',
+      brightMagenta: '#C084FC',
+      brightCyan: '#22D3EE',
+      brightWhite: '#FFFFFF',
+    },
+    allowProposedApi: true,
+    scrollback: 10000,
+    convertEol: true,
+  });
+  termInstance = term;
+
+  const container = $('#term-container');
+  term.open(container);
+  term.focus();
+
+  const fitAddon = { fit() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w <= 0 || h <= 0) return;
+    const cols = Math.floor(w / term._core._renderService.dimensions.css.cell.width) || 80;
+    const rows = Math.floor(h / term._core._renderService.dimensions.css.cell.height) || 24;
+    term.resize(cols, rows);
+    const sz = $('#term-size');
+    if (sz) sz.textContent = cols + 'x' + rows;
+    if (termSocket && termSocket.readyState === 1) {
+      termSocket.send(JSON.stringify({ type: 'resize', cols, rows }));
+    }
+  }};
+  term._fitAddon = fitAddon;
+
+  function connectWs() {
+    const cols = term.cols || 80;
+    const rows = term.rows || 24;
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = `${proto}//${location.host}/ws/terminal?token=${encodeURIComponent(TOKEN)}&cols=${cols}&rows=${rows}`;
+    const ws = new WebSocket(url);
+    termSocket = ws;
+
+    ws.onopen = () => {
+      const st = $('#term-status');
+      if (st) { st.textContent = 'Connected'; st.style.color = 'var(--green)'; }
+    };
+
+    ws.onmessage = (ev) => {
+      if (typeof ev.data === 'string') {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === 'exit') {
+            term.writeln('\r\n\x1b[33m[Process exited with code ' + msg.code + ']\x1b[0m');
+            const st = $('#term-status');
+            if (st) { st.textContent = 'Disconnected'; st.style.color = 'var(--orange)'; }
+            termReconnectTimer = setTimeout(() => {
+              if (state.view === 'terminal') { term.writeln('\r\n\x1b[36mReconnecting...\x1b[0m'); connectWs(); }
+            }, 2000);
+          }
+        } catch (_) { term.write(ev.data); }
+      } else {
+        term.write(ev.data);
+      }
+    };
+
+    ws.onclose = () => {
+      const st = $('#term-status');
+      if (st) { st.textContent = 'Disconnected'; st.style.color = 'var(--orange)'; }
+      if (state.view === 'terminal') {
+        termReconnectTimer = setTimeout(() => {
+          term.writeln('\r\n\x1b[36mReconnecting...\x1b[0m');
+          connectWs();
+        }, 2000);
+      }
+    };
+
+    ws.onerror = () => {};
+  }
+
+  term.onData(data => {
+    if (termSocket && termSocket.readyState === 1) {
+      termSocket.send(JSON.stringify({ type: 'input', data }));
+    }
+  });
+
+  term.onResize(({ cols, rows }) => {
+    if (termSocket && termSocket.readyState === 1) {
+      termSocket.send(JSON.stringify({ type: 'resize', cols, rows }));
+    }
+    const sz = $('#term-size');
+    if (sz) sz.textContent = cols + 'x' + rows;
+  });
+
+  const ro = new ResizeObserver(() => { if (term._fitAddon) term._fitAddon.fit(); });
+  ro.observe(container);
+  term._resizeObserver = ro;
+
+  setTimeout(() => { term._fitAddon.fit(); connectWs(); }, 100);
 }
 
 // ── File Manager ──
