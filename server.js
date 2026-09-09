@@ -1667,7 +1667,15 @@ const activeTerminals = new Map();
 function wsAccept(req, socket) {
   const key = req.headers['sec-websocket-key'];
   const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-5AB9C4F2C1E1').digest('base64');
-  socket.writeHead(101, { 'Upgrade': 'websocket', 'Connection': 'Upgrade', 'Sec-WebSocket-Accept': accept });
+  const response = [
+    'HTTP/1.1 101 Switching Protocols',
+    'Upgrade: websocket',
+    'Connection: Upgrade',
+    'Sec-WebSocket-Accept: ' + accept,
+    '',
+    ''
+  ].join('\r\n');
+  socket.write(response);
   socket.setNoDelay(true);
   socket.setKeepAlive(true, 30000);
   return socket;
