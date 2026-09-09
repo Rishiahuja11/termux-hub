@@ -76,7 +76,7 @@ function showGate() {
   const btn = $('#gate-btn');
   const toggle = $('#gate-toggle');
 
-  userRow.style.display = 'none';
+  userRow.style.display = '';
   btn.textContent = 'Sign In';
   label.textContent = 'Sign in to your device';
   toggle.innerHTML = 'Create account';
@@ -91,7 +91,7 @@ function showGate() {
     e.preventDefault();
     const u = $('#gate-username').value.trim();
     const p = pw.value;
-    if (!u || !p) return;
+    if (!u || !p) { $('#gate-err').textContent = 'Enter username and password'; return; }
     try {
       const endpoint = btn.textContent === 'Create Account' ? '/api/auth/create' : '/api/auth/login';
       const r = await api(endpoint, { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
