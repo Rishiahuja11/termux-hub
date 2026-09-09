@@ -1664,8 +1664,8 @@ const server = https.createServer({ cert: fs.readFileSync(certFile), key: fs.rea
 
 // ── WebSocket Terminal (raw implementation, no deps) ──
 const activeTerminals = new Map();
-function wsAccept(socket) {
-  const key = socket.headers['sec-websocket-key'];
+function wsAccept(req, socket) {
+  const key = req.headers['sec-websocket-key'];
   const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-5AB9C4F2C1E1').digest('base64');
   socket.writeHead(101, { 'Upgrade': 'websocket', 'Connection': 'Upgrade', 'Sec-WebSocket-Accept': accept });
   socket.setNoDelay(true);
@@ -1767,9 +1767,9 @@ server.on('upgrade', (req, socket, head) => {
   if (url.pathname !== '/ws/terminal') { socket.destroy(); return; }
   const token = url.searchParams.get('token');
   const username = validateSession(token);
-  if (!username) { wsAccept(socket); wsClose(socket, 4001); return; }
+  if (!username) { wsAccept(req, socket); wsClose(socket, 4001); return; }
 
-  const ws = wsAccept(socket);
+  const ws = wsAccept(req, socket);
   let buf = head || Buffer.alloc(0);
   let shellProc = null;
   let termId = crypto.randomBytes(8).toString('hex');
@@ -1777,14 +1777,15 @@ server.on('upgrade', (req, socket, head) => {
   const termRows = parseInt(url.searchParams.get('rows') || '24', 10);
 
   function spawnShell(cols, rows) {
-    const shell = process.env.SHELL || '/data/data/com.termux/files/usr/bin/bash';
+    const python = process.env.PYTHON || '/data/data/com.termux/files/usr/bin/python3';
+    const bridgeScript = path.join(os.homedir(), 'termux-hub', 'pty-bridge.py');
     const env = Object.assign({}, process.env, {
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
       COLUMNS: String(cols || 80),
       LINES: String(rows || 24),
     });
-    shellProc = spawn(shell, ['--login'], {
+    shellProc = spawn(python, [bridgeScript], {
       cwd: os.homedir(),
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -1822,15 +1823,7 @@ server.on('upgrade', (req, socket, head) => {
           if (msg.type === 'input' && shellProc && !shellProc.killed) {
             shellProc.stdin.write(msg.data);
           } else if (msg.type === 'resize' && shellProc && !shellProc.killed) {
-            try {
-              const winsize = Buffer.alloc(8);
-              winsize.writeUInt16BE(msg.cols || 80, 0);
-              winsize.writeUInt16BE(msg.rows || 24, 2);
-              winsize.writeUInt16BE(0, 4);
-              winsize.writeUInt16BE(0, 6);
-              const { execSync } = require('child_process');
-              execSync(`kill -s SIGWINCH ${shellProc.pid}`, { stdio: 'ignore' });
-            } catch (_) {}
+            shellProc.stdin.write('\x1b[8;' + (msg.rows || 24) + ';' + (msg.cols || 80) + 't');
           }
         } catch (_) {}
       }
