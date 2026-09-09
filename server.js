@@ -125,6 +125,8 @@ function getBuildLog(id) { const f = path.join(CONFIG.STORE_DIR, id, 'build.log'
 // ---- Device config (web-editable) ----
 const DEFAULT_CONFIG = {
   sshPassword: '',
+  sshIp: '',
+  sshPort: 8022,
   streamBitrate: 4000000,
   streamResolution: '720x1280',
   streamFps: 20,
@@ -1638,7 +1640,7 @@ async function route(req, res) {
     const current = loadConfig();
     const updated = { ...current };
     // Only allow updating known fields
-    const allowed = ['sshPassword', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
+    const allowed = ['sshPassword', 'sshIp', 'sshPort', 'streamBitrate', 'streamResolution', 'streamFps', 'streamQuality', 'hostname', 'port', 'adminNote', 'rootMode', 'wakeScreenOnStream', 'screenRecordTimeout', 'autoReconnectAdb', 'adbReconnectInterval'];
     for (const k of allowed) { if (body[k] !== undefined) updated[k] = body[k]; }
     saveConfig(updated);
     log(`config-update ip=${ip} fields=${Object.keys(body).join(',')}`);
