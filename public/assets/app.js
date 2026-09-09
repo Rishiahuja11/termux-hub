@@ -242,6 +242,21 @@ async function renderDashboard(el) {
   updateStats();
   if (dashboardRefreshTimer) clearInterval(dashboardRefreshTimer);
   dashboardRefreshTimer = setInterval(updateStats, 5000);
+
+  // Load SSH connection info
+  api('/api/config').then(r => {
+    const cfg = r.config || {};
+    const sshIp = cfg.sshIp || location.hostname;
+    const sshPort = cfg.sshPort || 8022;
+    const sshPw = cfg.sshPassword || '';
+    const grid = $('#quick-grid');
+    if (!grid) return;
+    const info = document.createElement('div');
+    info.className = 'quick-card';
+    info.style.cssText = 'grid-column:1/-1;cursor:default;text-align:left';
+    info.innerHTML = `<div class="quick-icon teal">${ICONS.terminal}</div><div><div class="quick-name">SSH Access</div><div class="quick-desc" style="font-family:var(--font-mono);font-size:11px;line-height:1.6;color:var(--fg2)">sshpass -p '${escH(sshPw || 'yourpassword')}' ssh -p ${sshPort} u0_a270@${escH(sshIp)}<br><span style="color:var(--fg3)">Configure in Settings → SSH Access</span></div></div>`;
+    grid.appendChild(info);
+  }).catch(() => {});
 }
 
 // ── Terminal (WebSocket + xterm.js) ──
@@ -249,12 +264,28 @@ let termInstance = null;
 let termSocket = null;
 let termReconnectTimer = null;
 
+async function termSSHRemote() {
+  try {
+    const r = await api('/api/config');
+    const cfg = r.config || {};
+    const ip = cfg.sshIp || '';
+    const port = cfg.sshPort || 8022;
+    const pw = cfg.sshPassword || '';
+    if (!ip) { toast('Set SSH IP in Settings first', 'error'); return; }
+    const cmd = `sshpass -p '${pw.replace(/'/g, "'\\''")}' ssh -o StrictHostKeyChecking=no -p ${port} u0_a270@${ip}\n`;
+    if (termSocket && termSocket.readyState === 1) {
+      termSocket.send(JSON.stringify({ type: 'input', data: cmd }));
+      toast('SSH connecting to ' + ip + ':' + port, 'info');
+    }
+  } catch (_) { toast('Failed to load SSH config', 'error'); }
+}
+
 function renderTerminal(el) {
   if (termSocket) { try { termSocket.close(); } catch (_) {} termSocket = null; }
   if (termInstance) { termInstance.dispose(); termInstance = null; }
   if (termReconnectTimer) { clearTimeout(termReconnectTimer); termReconnectTimer = null; }
 
-  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span id="term-bar-title">TermuX Hub Terminal</span></div><div id="term-container" style="flex:1;overflow:hidden"></div><div class="term-input-row" id="term-status-bar" style="display:flex;align-items:center;padding:4px 12px;font-size:11px;color:var(--fg3);gap:12px"><span id="term-status">Connecting...</span><span style="flex:1"></span><span id="term-size">80x24</span></div></div>`;
+  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span id="term-bar-title">TermuX Hub Terminal</span></div><div id="term-container" style="flex:1;overflow:hidden"></div><div class="term-input-row" id="term-status-bar" style="display:flex;align-items:center;padding:4px 12px;font-size:11px;color:var(--fg3);gap:12px"><span id="term-status">Connecting...</span><button class="btn-sm" onclick="termSSHRemote()" title="SSH to remote using Settings config" style="padding:3px 10px;font-size:10px">SSH Remote</button><span style="flex:1"></span><span id="term-size">80x24</span></div></div>`;
 
   if (typeof Terminal === 'undefined') {
     $('#term-container').innerHTML = '<div class="empty" style="padding:48px"><h3>xterm.js not loaded</h3><p>Check your internet connection</p></div>';
