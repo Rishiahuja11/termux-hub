@@ -613,13 +613,13 @@ async function getSystem() {
   const mem = os.totalmem(), freemem = os.freemem();
   let cpuLoad = null, uptimeSec = os.uptime();
   try {
-    const s = await runCmd('cat /proc/loadavg', 5);
+    const s = await shellCmd('cat /proc/loadavg', 5);
     const parts = s.stdout.trim().split(/\s+/);
     cpuLoad = parseFloat(parts[0]);
   } catch (_) {}
   let storage = null;
   try {
-    const s = await runCmd('df -k "' + home + '"', 5);
+    const s = await shellCmd('df -k "' + home + '"', 5);
     const lines = s.stdout.trim().split('\n');
     if (lines.length >= 2) {
       const f = lines[1].trim().split(/\s+/);
@@ -638,7 +638,7 @@ async function getSystem() {
 async function getApps(serverRoot) {
   const out = { webrunner_projects: [], services: [] };
   try {
-    const s = await runCmd('ps -eo pid,comm,args', 8);
+    const s = await shellCmd('ps -eo pid,comm,args', 8);
     const lines = s.stdout.split('\n');
     out.services = lines
       .map((l) => l.trim().split(/\s+/))
@@ -649,7 +649,7 @@ async function getApps(serverRoot) {
   } catch (_) {}
   // heuristic WebRunner project status via listening ports
   try {
-    const s = await runCmd('ss -tln 2>/dev/null | grep -E ":3000|:8443|:8900" || true', 8);
+    const s = await shellCmd('ss -tln 2>/dev/null | grep -E ":3000|:8443|:8900" || true', 8);
     out.ports = s.stdout;
   } catch (_) {}
   return out;
@@ -769,9 +769,10 @@ async function route(req, res) {
       const body = JSON.parse(await readBody(req, 64 * 1024));
       const cmd = (body.cmd || '').trim();
       if (!cmd) return sendJson(res, 400, { ok: false, error: 'no command' });
+      if (!rishConnected()) return sendJson(res, 503, { ok: false, error: 'Shizuku not connected. Connect via Settings.' });
       log(`exec ip=${ip}`);
       const timeout = Math.min(Math.max(parseInt(body.timeout || '30', 10) || 30, 1), CONFIG.MAX_COMMAND_SECONDS);
-      const result = await runCmd(cmd, timeout, body.cwd);
+      const result = await shellCmd(cmd, timeout, body.cwd);
       return sendJson(res, 200, result);
     } catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
   }
@@ -913,7 +914,7 @@ async function route(req, res) {
     const type = url.searchParams.get('type') || 'available';
     const q = (url.searchParams.get('q') || '').toLowerCase();
     try {
-      const r = await runCmd('dpkg --list 2>/dev/null', 15);
+      const r = await shellCmd('dpkg --list 2>/dev/null', 15);
       const availMap = { available: await cacheAptSearch(), installed: {} };
       const installed = [];
       r.stdout.split('\n').forEach((l) => {
@@ -934,9 +935,9 @@ async function route(req, res) {
     const name = url.searchParams.get('name');
     if (!name) return sendJson(res, 400, { ok: false, error: 'name required' });
     try {
-      const r = await runCmd('apt-cache show ' + shellQuote(name) + ' 2>&1', 15);
-      const s = await runCmd('apt-cache policy ' + shellQuote(name) + ' 2>/dev/null', 10);
-      const inst = await runCmd('dpkg -s ' + shellQuote(name) + ' 2>/dev/null', 10);
+      const r = await shellCmd('apt-cache show ' + shellQuote(name) + ' 2>&1', 15);
+      const s = await shellCmd('apt-cache policy ' + shellQuote(name) + ' 2>/dev/null', 10);
+      const inst = await shellCmd('dpkg -s ' + shellQuote(name) + ' 2>/dev/null', 10);
       return sendJson(res, 200, { ok: true, name, show: r.stdout, policy: s.stdout, installed: inst.stdout });
     } catch (e) { return sendJson(res, 500, { ok: false, error: e.message }); }
   }
@@ -954,7 +955,7 @@ async function route(req, res) {
     else cmd = 'pkg install -y ' + shellQuote(name) + ' 2>&1';
     const logLine = `[${new Date().toISOString()}] ${cmd}\n`;
     fs.appendFileSync(PKG_LOG, logLine);
-    const r = await runCmd(cmd, CONFIG.MAX_PKG_SECONDS);
+    const r = await shellCmd(cmd, CONFIG.MAX_PKG_SECONDS);
     fs.appendFileSync(PKG_LOG, r.stdout + '\n' + r.stderr + '\n[exit ' + (r.exitCode === null ? 'timed out' : r.exitCode) + ']\n\n');
     return sendJson(res, r.exitCode === 0 ? 200 : 400, { ok: r.exitCode === 0, name, action: op, exitCode: r.exitCode, output: r.stdout + r.stderr });
   }
@@ -1520,7 +1521,7 @@ async function route(req, res) {
       const ws = fs.createWriteStream(logFile);
       const doBuild = async () => {
         try {
-          const r = await runCmd('pkg install -y ' + shellQuote(pkgName), CONFIG.MAX_BUILD_SECONDS);
+          const r = await shellCmd('pkg install -y ' + shellQuote(pkgName), CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
           buildProc.exitCode = r.exitCode;
@@ -1558,18 +1559,18 @@ async function route(req, res) {
       try {
         const isPkg = !!app.pkg;
         if (isPkg) {
-          const r = await runCmd('pkg install -y ' + shellQuote(app.pkg), CONFIG.MAX_BUILD_SECONDS);
+          const r = await shellCmd('pkg install -y ' + shellQuote(app.pkg), CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
           buildProc.exitCode = r.exitCode;
           ws.write('\nexit ' + r.exitCode + '\n');
         } else {
           ws.write('=== Cloning ' + app.repo + ' ===\n');
-          await runCmd('git clone --depth 1 ' + shellQuote(app.repo) + ' ' + shellQuote(appDir + '/src'), CONFIG.MAX_BUILD_SECONDS);
+          await shellCmd('git clone --depth 1 ' + shellQuote(app.repo) + ' ' + shellQuote(appDir + '/src'), CONFIG.MAX_BUILD_SECONDS);
           ws.write('=== Building ===\n');
           const buildEnv = `HOME="${os.homedir()}" PREFIX="${os.homedir()}/.termux/usr" PATH="${os.homedir()}/.termux/usr/bin:$PATH"`;
           const buildCmd = buildEnv + ' bash -c "cd ' + shellQuote(appDir + '/src') + ' && ' + (shellQuote(app.build || 'echo no-build-command')) + '"';
-          const r = await runCmd(buildCmd, CONFIG.MAX_BUILD_SECONDS);
+          const r = await shellCmd(buildCmd, CONFIG.MAX_BUILD_SECONDS);
           ws.write(r.stdout + '\n' + r.stderr + '\n');
           buildProc.output = r.stdout + r.stderr;
           buildProc.exitCode = r.exitCode;
@@ -1606,7 +1607,7 @@ async function route(req, res) {
     const installed = loadInstalled();
     delete installed[id];
     saveInstalled(installed);
-    if (app.pkg) await runCmd('pkg remove -y ' + shellQuote(app.pkg) + ' 2>/dev/null || true', 60);
+    if (app.pkg) await shellCmd('pkg remove -y ' + shellQuote(app.pkg) + ' 2>/dev/null || true', 60);
     return sendJson(res, 200, { ok: true, id, removed: true });
   }
 

@@ -103,12 +103,85 @@ function showGate() {
 
 async function showDash() {
   $('#gate').classList.add('hidden');
+  try {
+    const st = await api('/api/android/shizuku/status');
+    if (!st.connected) {
+      showShizukuGate();
+      return;
+    }
+  } catch (_) {}
+  showMainDash();
+}
+
+function showShizukuGate() {
+  const dash = $('#dash');
+  dash.classList.remove('hidden');
+  $('#view-title').textContent = 'Shizuku Required';
+  const views = $('#views');
+  views.innerHTML = `
+    <div style="max-width:520px;margin:0 auto;padding:40px 20px;text-align:center">
+      <div style="width:80px;height:80px;margin:0 auto 24px;border-radius:20px;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(6,182,212,0.1));display:flex;align-items:center;justify-content:center">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Connect Shizuku</h2>
+      <p style="color:var(--fg2);font-size:14px;margin-bottom:24px">Shizuku provides elevated shell access required for all device management features.</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:left;margin-bottom:24px">
+        <ol style="font-size:13px;color:var(--fg2);margin:0;padding-left:20px;line-height:2.2">
+          <li>Install <a href="https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api" target="_blank" style="color:var(--accent2);font-weight:600">Shizuku</a> from Play Store</li>
+          <li>Open Shizuku app → tap <b style="color:var(--fg)">Start</b></li>
+          <li>In Shizuku → Settings → <b style="color:var(--fg)">rish</b> → Write files to Termux</li>
+          <li>Allow battery optimization for both Termux and Shizuku</li>
+          <li>Click <b style="color:var(--fg)">Connect</b> below</li>
+        </ol>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn-primary" style="width:auto;padding:12px 32px" onclick="shizukuForceConnect()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Connect via Shizuku
+        </button>
+        <button class="btn-sm" onclick="shizukuForceConnect()" style="padding:12px 20px">Retry</button>
+      </div>
+      <div id="shizuku-status-msg" style="margin-top:16px;font-size:12px;color:var(--fg3)"></div>
+    </div>`;
+}
+
+async function shizukuForceConnect() {
+  const msg = $('#shizuku-status-msg');
+  if (msg) msg.textContent = 'Connecting...';
+  try {
+    const r = await api('/api/android/shizuku/connect', { method: 'POST', body: '{}' });
+    if (r.ok) {
+      if (msg) msg.innerHTML = '<span style="color:var(--green)">Connected! Loading dashboard...</span>';
+      setTimeout(() => showMainDash(), 800);
+    } else {
+      if (msg) msg.innerHTML = '<span style="color:var(--red)">' + (r.error || 'Shizuku not running. Open Shizuku app and tap Start.') + '</span>';
+    }
+  } catch (_) {
+    if (msg) msg.innerHTML = '<span style="color:var(--red)">Connection failed. Is Shizuku installed and running?</span>';
+  }
+}
+
+function showMainDash() {
   $('#dash').classList.remove('hidden');
   $('#user-badge').textContent = CURRENT_USER;
   buildNav();
   const v = location.hash.replace('#', '') || 'dashboard';
   const valid = VIEWS.find(x => x.id === v) ? v : 'dashboard';
   navigateTo(valid);
+  startShizukuWatch();
+}
+
+let shizukuWatchTimer = null;
+function startShizukuWatch() {
+  if (shizukuWatchTimer) clearInterval(shizukuWatchTimer);
+  shizukuWatchTimer = setInterval(async () => {
+    try {
+      const st = await api('/api/android/shizuku/status');
+      if (!st.connected && state.view !== 'settings') {
+        showShizukuGate();
+      }
+    } catch (_) {}
+  }, 30000);
 }
 
 function buildNav() {
@@ -285,7 +358,7 @@ function renderTerminal(el) {
   if (termInstance) { termInstance.dispose(); termInstance = null; }
   if (termReconnectTimer) { clearTimeout(termReconnectTimer); termReconnectTimer = null; }
 
-  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span id="term-bar-title">TermuX Hub Terminal</span></div><div id="term-container" style="flex:1;overflow:hidden"></div><div class="term-input-row" id="term-status-bar" style="display:flex;align-items:center;padding:4px 12px;font-size:11px;color:var(--fg3);gap:12px"><span id="term-status">Connecting...</span><button class="btn-sm" onclick="termSSHRemote()" title="SSH to remote using Settings config" style="padding:3px 10px;font-size:10px">SSH Remote</button><span style="flex:1"></span><span id="term-size">80x24</span></div></div>`;
+  el.innerHTML = `<div class="term-box"><div class="term-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span id="term-bar-title">TermuX Hub Terminal</span></div><div id="term-container" style="flex:1;overflow:hidden"></div><div class="term-input-row" id="term-status-bar" style="display:flex;align-items:center;padding:4px 12px;font-size:11px;color:var(--fg3);gap:12px"><span id="term-status">Connecting...</span><span id="term-shell-type" style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--surface2)">Checking shell...</span><button class="btn-sm" onclick="termSSHRemote()" title="SSH to remote using Settings config" style="padding:3px 10px;font-size:10px">SSH Remote</button><span style="flex:1"></span><span id="term-size">80x24</span></div></div>`;
 
   if (typeof Terminal === 'undefined') {
     $('#term-container').innerHTML = '<div class="empty" style="padding:48px"><h3>xterm.js not loaded</h3><p>Check your internet connection</p></div>';
@@ -355,7 +428,21 @@ function renderTerminal(el) {
 
     ws.onopen = () => {
       const st = $('#term-status');
+      const stype = $('#term-shell-type');
       if (st) { st.textContent = 'Connected'; st.style.color = 'var(--green)'; }
+      api('/api/android/shizuku/status').then(r => {
+        if (stype) {
+          if (r.connected) {
+            stype.textContent = 'rish (Shizuku)';
+            stype.style.background = 'rgba(34,197,94,0.15)';
+            stype.style.color = 'var(--green)';
+          } else {
+            stype.textContent = 'local shell';
+            stype.style.background = 'rgba(245,158,11,0.15)';
+            stype.style.color = 'var(--orange)';
+          }
+        }
+      }).catch(() => { if (stype) stype.textContent = ''; });
     };
 
     ws.onmessage = (ev) => {

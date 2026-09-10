@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
-"""PTY bridge: stdin/stdout ↔ PTY master. Node.js pipes data through this process."""
+"""PTY bridge: stdin/stdout <-> PTY master. Node.js pipes data through this process.
+Uses rish (Shizuku) if available for elevated privileges."""
 import os, sys, pty, select, struct, fcntl, termios, re
+
+RISH_BIN = '/data/data/com.termux/files/usr/bin/rish'
 
 def set_winsize(fd, cols, rows):
     winsize = struct.pack('HHHH', rows, cols, 0, 0)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
+def rish_available():
+    return os.path.exists(RISH_BIN) and os.path.getsize(RISH_BIN) > 50
+
 def main():
     cols = int(os.environ.get('COLUMNS', '80'))
     rows = int(os.environ.get('LINES', '24'))
     shell = os.environ.get('SHELL', '/data/data/com.termux/files/usr/bin/bash')
+
+    use_rish = rish_available()
 
     master_fd, slave_fd = pty.openpty()
     set_winsize(master_fd, cols, rows)
@@ -29,7 +37,10 @@ def main():
         env['COLORTERM'] = 'truecolor'
         env['COLUMNS'] = str(cols)
         env['LINES'] = str(rows)
-        os.execvpe(shell, [shell, '--login'], env)
+        if use_rish:
+            os.execvpe(RISH_BIN, [RISH_BIN], env)
+        else:
+            os.execvpe(shell, [shell, '--login'], env)
     else:
         os.close(slave_fd)
         stdin_fd = sys.stdin.fileno()
